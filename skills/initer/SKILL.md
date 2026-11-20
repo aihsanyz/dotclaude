@@ -1,20 +1,20 @@
 ---
 name: initer
-description: Bulunulan klasörü bu çalışma düzenine göre kurar; klasör boşsa kullanıcının seçtiği stack'le yeni projeyi oluşturur, kod varsa mevcut projeyi düzenler. Git, private GitHub reposu, main/development branch'leri, .claude/stack.toml, proje CLAUDE.md'si, Docker ve .env uyumu ve development ortamını hazırlar. Yeni bir projeye başlanırken, bir projede ilk kez çalışılacağında, .claude/stack.toml yoksa veya kullanıcı /initer dediğinde kullan.
+description: Bulunulan klasörü bu çalışma düzenine göre kurar; klasör boşsa kullanıcının seçtiği stack'le yeni projeyi oluşturur, kod varsa mevcut projeyi düzenler. Git, private GitHub reposu, main/development branch'leri, stack ve komutları içeren proje CLAUDE.md'si, Docker ve .env uyumu ve development ortamını hazırlar. Yeni bir projeye başlanırken, bir projede ilk kez çalışılacağında, proje CLAUDE.md'sinde ## Komutlar bölümü yoksa veya kullanıcı /initer dediğinde kullan.
 ---
 
 # /initer
 
-Bulunulan klasörde bir kez çalışır; `/tasker`, `/push`, `/merge` ve `/release` bundan sonra kullanılır. Amaç: stack bilgisinin bir kez çıkarılıp `.claude/stack.toml`'a yazılması, projenin global `CLAUDE.md` kurallarına uyması ve development ortamının ayakta olması.
+Bulunulan klasörde bir kez çalışır; `/tasker`, `/push`, `/merge` ve `/release` bundan sonra kullanılır. Amaç: stack bilgisinin ve komutların bir kez çıkarılıp proje `CLAUDE.md`'sine yazılması, projenin global `CLAUDE.md` kurallarına uyması ve development ortamının ayakta olması.
 
 Tüm git komutlarında `git -C <mutlak yol>` kullan. Bir adım başarısız olursa dur ve bildir.
 
 ## 1. Klasörün durumunu belirle
 Klasör kullanıcının oturumu açtığı dizindir (`pwd`).
 - `gh auth status` başarısızsa dur ve bildir.
-- `.claude/stack.toml` zaten varsa init yapılmıştır:
+- Proje `CLAUDE.md`'sinde `## Komutlar` bölümü varsa init yapılmıştır:
   - Development ortamı bu makinede kurulu değilse (ana klasörde `.env` yok veya container'lar çalışmıyor; ör. sunucu yenilendi, proje yeni clone edildi): ana klasörü `development`'a geçir ve `origin/development` ile eşitle, `.env` yoksa `.env.example`'dan oluştur (`COMPOSE_PROJECT_NAME=<proje>-dev`), sonra `~/.claude/scripts/deploy.sh apply <ana klasör> --bootstrap`. Veri boş başlar, seed çalışır.
-  - Dosyayı projeyle karşılaştır, farkları göster; yalnızca güncelleme gerekiyorsa D akışına geç.
+  - `CLAUDE.md`'deki stack ve komutları projeyle karşılaştır, farkları göster; yalnızca güncelleme gerekiyorsa D akışına geç.
 - Aksi halde duruma göre akış seç:
 
 | Durum | Akış |
@@ -38,7 +38,7 @@ Klasör kullanıcının oturumu açtığı dizindir (`pwd`).
    - Çalışan en küçük uygulama: `0.0.0.0`'da dinler, bir sağlık uç noktası vardır (`/health` veya framework'ün karşılığı).
    - `Dockerfile`, `compose.yaml` (uygulama + veri servisleri; `healthcheck`, `restart: unless-stopped`, portlar `.env` değişkeniyle, iç servislerin portları yayınlanmaz, veri volume'da), `.dockerignore` (`docs/`, `.env`), `.gitignore` (`.env`), `.env.example` (bütün değişkenler varsayılanlarıyla).
    - Migration aracı ve ilk migration (veritabanı varsa), test aracı ve bir duman testi, seed (gerekiyorsa).
-   - `.claude/stack.toml`, proje `CLAUDE.md`'si, kısa bir `README.md` (aşağıdaki şablonlar).
+   - Proje `CLAUDE.md`'si (stack ve `## Komutlar` bölümüyle) ve kısa bir `README.md` (aşağıdaki şablon).
    - Bağımlılıkları host'a değil, container içinde kur (ör. lock dosyasını `docker run --rm` ile üret).
 4. **Yerinde doğrula** (henüz git yok, düzeltmeler doğrudan yapılır): `.env.example`'dan `.env` oluştur, `COMPOSE_PROJECT_NAME=<ad>-dev`; `docker compose up -d --build --wait`, migration, seed ve testleri container içinde çalıştır, sağlık uç noktasını `curl` ile kontrol et. Geçene kadar düzelt. Bu ortam development ortamı olarak kalır.
 5. **Git:** `git init -b main`, ilk commit (`feat: initial project setup`), ardından "Ortak: GitHub reposu".
@@ -61,61 +61,37 @@ Klasör kullanıcının oturumu açtığı dizindir (`pwd`).
    - Veri servisleri compose'ta mı, resmi image değişkenlerini kullanıyor mu, portları yayınlanmamış mı, veri volume'da mı?
    - Uygulama `0.0.0.0`'da mı, portlar `.env` değişkeniyle mi, `healthcheck` ve `restart: unless-stopped` var mı?
    - `.env.example` eksiksiz mi, `.env` `.gitignore`'da mı? Bind mount ve hot reload.
-4. **Planı onaylat** (`send_to_user`): `stack.toml` içeriği, proje `CLAUDE.md`'si, dosya değişiklikleri ve dayandıkları kurallar, varsa yeni bağımlılıklar.
-5. **Uygula:** `/tasker chore/project-setup`. Development ortamı ve `stack.toml` henüz olmadığından `tasker`'ın 5. adımındaki `stack.toml` ön koşulunu ve development kopyalamasını atla; veri servisleri boş başlar. Değişiklikleri Conventional Commits ile commit'le.
+4. **Planı onaylat** (`send_to_user`): proje `CLAUDE.md`'si (stack ve komutlar), dosya değişiklikleri ve dayandıkları kurallar, varsa yeni bağımlılıklar.
+5. **Uygula:** `/tasker chore/project-setup`. Development ortamı ve `## Komutlar` bölümü henüz olmadığından `tasker`'ın 5. adımındaki init ön koşulunu ve development kopyalamasını atla; veri servisleri boş başlar. Değişiklikleri Conventional Commits ile commit'le.
 6. **Merge:** `/merge` akışı; prova `deploy.sh rehearse <worktree> --bootstrap` ile çalışır. Reviewer ve auditor normal çalışır.
 7. **Development ortamını ilk kez kur** (`/merge`'ün 6. adımında `apply` yerine): ana klasörde `.env` yoksa `.env.example`'dan oluştur (`COMPOSE_PROJECT_NAME=<proje>-dev`), sonra `~/.claude/scripts/deploy.sh apply <ana klasör> --bootstrap`. `local.md`'deki adresleri bildir.
 
-## Şablonlar
+## Şablon: proje `CLAUDE.md`
+`## Komutlar` bölümünü `deploy.sh` okur; biçimi koru (`- anahtar: \`değer\``) ve yalnızca projede olan anahtarları yaz. Veri servisleri, motorları ve portlar `compose.yaml`'dan çıkarılır; burada tekrar yazılmaz.
 
-### `.claude/stack.toml`
-```toml
-# Bu dosya initer tarafından oluşturulur; stack değişince aynı branch'te güncellenir.
-[project]
-language = "php"
-framework = "laravel 11"
-health_timeout = 90                 # saniye, isteğe bağlı
-
-[services.app]
-role = "app"                        # app | worker | data | other
-health = { port_var = "APP_PORT", path = "/up" }
-
-[services.queue]
-role = "worker"
-
-[services.db]
-role = "data"
-engine = "postgres"                 # postgres | mysql | mariadb | mongodb kopyalanır; redis vb. boş başlar
-
-[services.cache]
-role = "data"
-engine = "redis"
-
-[commands]
-service = "app"                     # komutların çalıştığı compose servisi
-migrate = "php artisan migrate --force"
-test = "php artisan test"
-seed = "php artisan db:seed --force"   # yalnızca ilk kurulumda
-
-[migrations]
-dir = "database/migrations"
-```
-Servis adları `compose.yaml`'daki adlarla aynı olmalı. Olmayan alanları yazma (ör. migration yoksa `[migrations]` ve `migrate` yok).
-
-### Proje `CLAUDE.md`
 ```markdown
 # <Proje adı>
 
 <Projenin ne yaptığı, bir cümle.>
 
 ## Stack
-Ayrıntılar `.claude/stack.toml`'da; stack, servisler ve komutlar için önce onu oku, kod tabanını yeniden tarama.
-- <dil / framework>, veri: <servisler>
+- <dil / framework ve sürüm>
+- Servisler: <app: ..., worker: ..., db: postgres, cache: redis>
+- Development ortamı: ana repo klasörü, `development` branch'i; her merge'den sonra `/merge` günceller. Yeni iş: `/tasker`.
 
-## Çalıştırma
-- Development ortamı: ana repo klasörü, `development` branch'i; her merge'den sonra `/merge` günceller.
-- Yeni iş: `/tasker`; komutlar container içinde: `docker compose run --rm <servis> <komut>`.
+## Komutlar
+<!-- deploy.sh bu bölümü okur. Biçim: "- anahtar: `değer`". Anahtarlar: service, migrate, test, seed, migrations, engines -->
+- service: `app`
+- migrate: `php artisan migrate --force`
+- test: `php artisan test`
+- seed: `php artisan db:seed --force`
+- migrations: `database/migrations`
 
 ## Notlar
 - <Projeye özel kurallar, bilinen tuzaklar.>
 ```
+
+- `service`: komutların çalıştığı compose servisi; yazılmazsa `build:` olan ilk servis.
+- `seed`: yalnızca ilk kurulumda çalışır.
+- `engines`: yalnızca image adından anlaşılmayan veri servisleri için (ör. `db=postgres mq=redis`).
+- Komutlar container içinde çalışır: `docker compose run --rm <service> sh -c "<komut>"`.

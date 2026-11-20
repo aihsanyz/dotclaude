@@ -13,7 +13,7 @@ Tüm git komutlarında `git -C <mutlak yol>` kullan; shell değişkeniyle yol ku
 - Ana repoda `git fetch origin --tags --prune`; yerel `main` ve `development`'ı eşitle (`tasker` skill'inin 3. adımındaki yöntem).
 - `~/.claude/scripts/release-info.sh` çıkış kodu 1 ise "Yayınlanacak değişiklik yok" de ve dur.
 - Release worktree'si aç: `git -C <ana repo> worktree add --detach <ana repo dizini>.worktrees/release-<YYYYMMDD> origin/development`.
-- Release worktree'sinin ortamını `tasker` skill'inin 5. adımındaki gibi hazırla (`compose.yaml` varsa): `.env.example`'dan `.env`, `COMPOSE_PROJECT_NAME=<proje>-release`, development'a ayrılmamış boş portlar, veri servislerini başlat ve `~/.claude/scripts/db.sh copy-from-dev <release worktree>`. Releaser testleri bu ortamda, `stack.toml`'daki komutla çalıştırır.
+- Release worktree'sinin ortamını `tasker` skill'inin 5. adımındaki gibi hazırla (`compose.yaml` varsa): `.env.example`'dan `.env`, `COMPOSE_PROJECT_NAME=<proje>-release`, development'a ayrılmamış boş portlar, veri servislerini başlat ve `~/.claude/scripts/deploy.sh copy-data <release worktree>`. Releaser testleri bu ortamda, proje `CLAUDE.md`'sindeki `## Komutlar` bölümündeki test komutuyla çalıştırır.
 
 ## 2. Denetim ve hazırlık raporu
 - `auditor`'ü release worktree'sinde `origin/main..HEAD` kapsamıyla çalıştır.

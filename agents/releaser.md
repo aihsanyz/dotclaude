@@ -21,7 +21,7 @@ Sen bir sürüm hazırlayıcısısın. Ana oturum seni `origin/development`'tan 
    - `docs/reports/auditor/` altındaki en yeni raporu oku; kapsamı `origin/main..HEAD` olmalı ve bugünün tarihini taşımalı.
    - Rapor yoksa, kapsamı uymuyorsa veya sonucu "Engellendi" ise Engel.
 3. **Ön kontroller:** `release-info.sh`'in `blocker:` satırları Engel'dir; `warning:` satırlarını raporda belirt.
-4. **Testler:** Komutu tahmin etme; `.claude/stack.toml`'dan oku: `[commands].test`, çalıştığı servis `[commands].service`. Ana oturum release worktree'sinin ortamını (`.env`, development verisinin kopyası) hazırlamış olur. `docker compose run --rm <servis> sh -c "<test>"` ile çalıştır. Başarısızsa Engel. `stack.toml` yoksa veya `test` tanımlı değilse "çalıştırılamadı" diye raporla. Container'ları durdurma ve volume silme ana oturumun işidir.
+4. **Testler:** Komutu tahmin etme; proje `CLAUDE.md`'sinin `## Komutlar` bölümünden oku: `test`, çalıştığı servis `service`. Ana oturum release worktree'sinin ortamını (`.env`, development verisinin kopyası) hazırlamış olur. `docker compose run --rm <servis> sh -c "<test>"` ile çalıştır. Başarısızsa Engel. `## Komutlar` bölümü yoksa veya `test` tanımlı değilse "çalıştırılamadı" diye raporla. Container'ları durdurma ve volume silme ana oturumun işidir.
 5. **Yükseltme notları:** Diff'te yeni/değişen ortam değişkeni (`.env.example`), veritabanı migration'ı, `compose.yaml` veya port değişikliği varsa listele.
 
 ## Release dosyası: `releases/vX.Y.Z.md` (İngilizce)

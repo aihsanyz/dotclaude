@@ -25,7 +25,7 @@
 - Git'li projelerde `main` ve `development` ile çalışılır; `development` yoksa `main`'den oluştur ve uzağa gönder.
 - Her iş `origin/development`'tan açılan bir worktree branch'inde yapılır (T3 Code'da da taban `origin/development`, `main` değil). Yerel `main` ve `development` uzaktakiyle her zaman fast-forward eşit tutulur.
 - Geliştirme ilerledikçe commit at. Akışları skill'lerle yürüt, adımları elle tekrarlama; kapılar atlanmaz:
-  - `/initer`: bulunulan klasörü bu düzene bir kez hazırlar; klasör boşsa seçilen stack'le yeni proje oluşturur, doluysa mevcut projeyi uyarlar (git, private GitHub reposu, `main`/`development`, `stack.toml`, proje `CLAUDE.md`'si, Docker ve `.env` uyumu, development ortamı). Diğer skill'lerden önce çalışır.
+  - `/initer`: bulunulan klasörü bu düzene bir kez hazırlar; klasör boşsa seçilen stack'le yeni proje oluşturur, doluysa mevcut projeyi uyarlar (git, private GitHub reposu, `main`/`development`, stack ve komutları içeren proje `CLAUDE.md`'si, Docker ve `.env` uyumu, development ortamı). Diğer skill'lerden önce çalışır.
   - `/tasker`: yeni iş için worktree, branch, development verisinin kopyası ve Docker ortamı.
   - `/push`: reviewer kapısı, ardından push.
   - `/merge`: entegrasyon provası ve auditor kapısı, PR, `development`'a squash merge, development ortamının güncellenmesi ve temizlik.
@@ -56,13 +56,13 @@
 - Her projenin `development` ortamı ana repo klasöründe (`development` branch'i) sürekli ayakta durur: `.env.example`'daki varsayılan portlar ve `COMPOSE_PROJECT_NAME=<proje>-dev`. Her merge'den sonra güncellenir. `main` için ortam tutulmaz.
 - **ÖNEMLİ:** Merge sonrası development'ta tek bir standart işlem çalışır (`~/.claude/scripts/deploy.sh apply`: ortam değişkeni eşitleme, build, migration, `up`, sağlık kontrolü). Merge'den önce aynısı worktree'de, development verisinin güncel kopyasıyla provadan geçer (`deploy.sh rehearse`); prova geçmeden merge yapılmaz. Hatalar merge öncesinde yakalanır ve aynı branch'te düzeltilir.
 - Merge sonrası development güncellemesi yine de başarısız olursa geri alma yapılmaz: hatayı bildir ve hemen `/tasker fix/...` ile düzeltmeye geç; düzeltme önceliklidir.
-- Development ortamının durumu, logları ve yeniden başlatılması için ana klasörde `docker compose ps/logs/restart`. Veri yedeği ve geri yükleme otomatik yapılmaz; kullanıcı isterse `~/.claude/scripts/db.sh backup <ana klasör>` ve `db.sh restore <ana klasör> <servis> <dosya> --yes` (geri yükleme geri alınamaz, açık onay al).
+- Development ortamının durumu, logları ve yeniden başlatılması için ana klasörde `docker compose ps/logs/restart`. Veri yedeği ve geri yükleme yapılmaz.
 - Migration'lar: development'ta uygulanmış bir migration asla düzenlenmez, düzeltme yeni bir migration'la yapılır. Henüz merge edilmemiş branch'in kendi migration'ları düzenlenebilir. MySQL'de yarım kalmış bir migration için nasıl ilerleneceğini kullanıcıya sor.
 - Veri servisleri (PostgreSQL, MySQL, MariaDB, MongoDB, Redis vb.) projenin compose dosyasında tanımlanır. Development ve her worktree kendi container'larını ve volume'larını kullanır; portları yayınlanmaz. Bağlantı bilgileri resmi image değişkenleriyle (`POSTGRES_*`, `MYSQL_*`, `MARIADB_*`, `MONGO_INITDB_*`) `.env.example`'da durur.
-- Worktree'ler development verisinin kopyasıyla başlar (`~/.claude/scripts/db.sh copy-from-dev`); Redis gibi önbellekler ve kopyalanamayan motorlar boş başlar.
+- Worktree'ler development verisinin kopyasıyla başlar (`~/.claude/scripts/deploy.sh copy-data`); Redis gibi önbellekler ve kopyalanamayan motorlar boş başlar.
 - Her worktree kendi veri servislerini çalıştırdığı için bellek sınırlıdır (MySQL ~450 MB); yeni worktree açmadan önce kullanılabilir belleğe bak, yetersizse kullanıcıyı uyar.
 - Merge sonrası worktree'nin bütün compose volume'ları (veri dahil) sormadan silinir; development'ın volume'ları ve verisi asla otomatik silinmez veya sıfırlanmaz.
-- Projenin stack bilgisi (servisler, veri motorları, migration, seed, test ve sağlık kontrolü komutları) projede commit edilen `.claude/stack.toml`'dadır; `/initer` bir kez oluşturur, stack değişince aynı branch'te güncellenir. Prova ve güncelleme bu dosyayı okur; stack'i öğrenmek için kod tabanını yeniden tarama.
+- Projenin stack bilgisi ve komutları proje `CLAUDE.md`'sindedir: `## Stack` (dil, framework, servisler) ve `## Komutlar` (`service`, `migrate`, `test`, `seed`, `migrations`; biçim `- anahtar: \`değer\``). `/initer` oluşturur, stack değişince aynı branch'te güncellenir; prova ve güncelleme `## Komutlar`'ı okur. Veri servisleri, motorları ve portlar `compose.yaml`'dan çıkarılır, ayrıca yazılmaz.
 
 ## Ağ Erişimi
 - Uygulama ve arayüz servisleri yerel ağdan ve Tailscale'den erişilebilir olmalı:
