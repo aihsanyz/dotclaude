@@ -31,19 +31,23 @@ Tüm git komutlarında `git -C <mutlak yol>` kullan; shell değişkeniyle yol ku
 - **Merge:** `gh pr merge <PR> --squash --subject "<başlık>" --body "<1-2 madde>"`. `--delete-branch` kullanma, temizliği 4. adım yapar.
 - Repo'da branch koruma kuralları gereği bekleyen kontrol veya onay varsa merge'ü zorlama (`--admin` kullanma); durumu bildir ve turu bitir. Kullanıcı "merge edildi" dediğinde 4. adımdan devam et.
 
-## 4. Merge sonrası
+## 4. Merge sonrası: önce development ortamı
 - Merge'ün gerçekleştiğini doğrula: `gh pr view <PR> --json state` sonucu `MERGED` olmalı; ardından `git fetch origin --prune`.
 - Yerel `development`'ı eşitle (`start-task` skill'inin 3. adımındaki yöntem).
-- **Development ortamını güncelle:** `dev-env` skill'inin güncelleme adımları. Başarısız olursa temizliğe devam et ama sonucu özette bildir.
-- **Docker temizliği** (worktree'de `compose.yaml` varsa):
+- **Development ortamını güncelle:** `dev-env` skill'inin güncelleme adımları. Build, migration, `up` ve `curl` doğrulamasının hepsi geçerse güncelleme başarılıdır.
+- **Başarısızsa temizlik yapma:** worktree'yi, container'larını, veritabanını ve branch'lerini olduğu gibi bırak; karşılaştırma ve teşhis için gerekir. Hatayı, worktree yolunu ve adresini bildir; düzeltmenin `/start-task fix/...` ile yeni bir branch'te yapılacağını söyle (squash merge edilmiş branch'e devam edilmez). 6. adıma geç.
+
+## 5. Temizlik (yalnızca development ortamı sağlıklıysa)
+Bu worktree'yi ve daha önce merge edilip temizlenmeyi bekleyen worktree'leri temizle. Bekleyenleri bul: `git worktree list` içindeki her branch için `gh pr list --head <branch> --state merged --json number` sonuç döndürüyorsa merge edilmiştir. Her biri için:
+- **Docker** (worktree'de `compose.yaml` varsa):
   - `docker compose down --rmi local`
   - Her ortak servis için worktree veritabanını sormadan sil: `~/.claude/scripts/db.sh drop <engine> <proje> <branch>`. `<proje>_dev` asla silinmez; script de bunu reddeder.
-  - Projeye ait volume'lar varsa (`docker volume ls --filter label=com.docker.compose.project=<proje>`) listele ve silmeden önce sor.
-- **Worktree:** `git -C <ana repo> worktree remove <worktree yolu>`. Commit edilmemiş değişiklik nedeniyle reddederse dur ve sor; `--force` kullanma.
+  - Worktree'nin compose projesine ait başka volume'lar varsa (`docker volume ls --filter label=com.docker.compose.project=<COMPOSE_PROJECT_NAME>`) listele ve silmeden önce sor.
+- **Worktree:** `git -C <ana repo> worktree remove <worktree yolu>`. Commit edilmemiş değişiklik nedeniyle reddederse o worktree'yi atla ve sor; `--force` kullanma.
 - **Branch'ler:**
   - `git -C <ana repo> branch -D <branch>`
   - `git -C <ana repo> push origin --delete <branch>`. GitHub branch'i zaten sildiyse çıkan hatayı yok say.
-- **T3 Code:** Bu iş T3 Code'un açtığı bir worktree'deyse ve oturum hâlâ o dizindeyse, worktree'yi silmeden önce kullanıcıya bildir.
+- **T3 Code:** Worktree T3 Code'un açtığı bir worktree'yse ve bir oturum hâlâ o dizindeyse, silmeden önce kullanıcıya bildir.
 
-## 5. Bildir
-Kısa özet: auditor sonucu ve rapor yolu, PR başlığı, merge durumu, yapılan temizlik.
+## 6. Bildir
+Kısa özet: auditor sonucu ve rapor yolu, PR başlığı, merge durumu, development ortamının durumu ve adresi, yapılan veya bekletilen temizlik.
