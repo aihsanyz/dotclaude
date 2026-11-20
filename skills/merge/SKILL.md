@@ -35,9 +35,16 @@ Tüm git komutlarında `git -C <mutlak yol>` kullan; shell değişkeniyle yol ku
 - Merge'ün gerçekleştiğini doğrula: `gh pr view <PR> --json state` sonucu `MERGED` olmalı; ardından `git fetch origin --prune`.
 - Yerel `development`'ı eşitle (`start-task` skill'inin 3. adımındaki yöntem).
 - **Development ortamını güncelle:** `dev-env` skill'inin güncelleme adımları. Build, migration, `up` ve `curl` doğrulamasının hepsi geçerse güncelleme başarılıdır.
-- **Başarısızsa temizlik yapma:** worktree'yi, container'larını, veritabanını ve branch'lerini olduğu gibi bırak; karşılaştırma ve teşhis için gerekir. Hatayı, worktree yolunu ve adresini bildir; düzeltmenin `/start-task fix/...` ile yeni bir branch'te yapılacağını söyle (squash merge edilmiş branch'e devam edilmez). 6. adıma geç.
+- **Başarısızsa temizlik yapma:** worktree'yi, container'larını, veritabanını ve branch'lerini olduğu gibi bırak; karşılaştırma ve teşhis için gerekir. Worktree kullanıcı onayı beklemez; development ortamının bir sonraki başarılı güncellemesini bekler ve o anda temizlenir (5. adım).
+  - Hatayı, worktree yolunu ve adresini bildir ve kullanıcıya şu seçenekleri sun; hangisinin uygulanacağına kullanıcı karar verir, kendiliğinden düzeltmeye başlama:
+    1. **Düzelt:** `/start-task fix/...` ile yeni branch (squash merge edilmiş branch'e devam edilmez), ardından `/push` ve `/merge`.
+    2. **Geri al:** `revert/...` branch'inde `git revert <squash commit>`, ardından `/push` ve `/merge`.
+    3. **Tekrar dene:** Hata geçiciyse (ağ, image indirme vb.) `/dev-env güncelle`.
+    4. **Yine de temizle:** Kullanıcı isterse 5. adımı development ortamının durumuna bakmadan uygula.
+  - 6. adıma geç.
 
-## 5. Temizlik (yalnızca development ortamı sağlıklıysa)
+## 5. Temizlik (development ortamı sağlıklıysa veya kullanıcı "yine de temizle" dediyse)
+Bu adım `dev-env` skill'indeki başarılı bir güncellemeden sonra da çalışır.
 Bu worktree'yi ve daha önce merge edilip temizlenmeyi bekleyen worktree'leri temizle. Bekleyenleri bul: `git worktree list` içindeki her branch için `gh pr list --head <branch> --state merged --json number` sonuç döndürüyorsa merge edilmiştir. Her biri için:
 - **Docker** (worktree'de `compose.yaml` varsa):
   - `docker compose down --rmi local`

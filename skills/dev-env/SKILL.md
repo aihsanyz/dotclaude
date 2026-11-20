@@ -28,6 +28,7 @@ Her projenin `development` ortamı ana repo klasöründe, `development` branch'i
    - Başarısız olursa **düzeltmeye çalışma**: hatayı, hangi migration'da durduğunu ve alınan yedeğin yolunu bildir. Düzeltme `/start-task fix/...` ile yapılır. Geri yükleme yalnızca kullanıcı isterse yapılır.
 5. `docker compose up -d` (yalnızca değişen servisler yeniden başlar).
 6. Adresleri `curl` ile doğrula; servis ayağa kalkmazsa son logları (`docker compose logs --tail 50`) bildir.
+7. Güncelleme başarılıysa (build, migration, `up` ve `curl` hepsi geçtiyse) merge edilip temizlenmeyi bekleyen worktree'leri temizle: `merge` skill'inin 5. adımı. Bu, `/merge` dışında yapılan güncellemeler için de geçerlidir (ör. "tekrar dene").
 
 ## durum / log / yeniden-başlat
 - Durum: `docker compose ps`, son commit (`git log -1 --oneline`), adreslerin `curl` sonucu.
