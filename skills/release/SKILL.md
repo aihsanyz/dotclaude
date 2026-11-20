@@ -13,6 +13,7 @@ Tüm git komutlarında `git -C <mutlak yol>` kullan; shell değişkeniyle yol ku
 - Ana repoda `git fetch origin --tags --prune`; yerel `main` ve `development`'ı eşitle (`tasker` skill'inin 3. adımındaki yöntem).
 - `~/.claude/scripts/release-info.sh` çıkış kodu 1 ise "Yayınlanacak değişiklik yok" de ve dur.
 - Release worktree'si aç: `git -C <ana repo> worktree add --detach <ana repo dizini>.worktrees/release-<YYYYMMDD> origin/development`.
+- Release worktree'sinin ortamını `tasker` skill'inin 5. adımındaki gibi hazırla (`compose.yaml` varsa): `.env.example`'dan `.env`, `COMPOSE_PROJECT_NAME=<proje>-release`, development'a ayrılmamış boş portlar, veri servislerini başlat ve `~/.claude/scripts/db.sh copy-from-dev <release worktree>`. Releaser testleri bu ortamda, `stack.toml`'daki komutla çalıştırır.
 
 ## 2. Denetim ve hazırlık raporu
 - `auditor`'ü release worktree'sinde `origin/main..HEAD` kapsamıyla çalıştır.
@@ -43,7 +44,7 @@ Tüm git komutlarında `git -C <mutlak yol>` kullan; shell değişkeniyle yol ku
 ## 6. Temizlik
 - Release worktree'sini kaldır (`git worktree remove`, `--force` yok).
 - `release/vX.Y.Z` branch'ini yerelde ve uzakta sil (uzakta yoksa hatayı yok say).
-- Release worktree'sinde Docker ortamı ayağa kaldırıldıysa `docker compose down --rmi local`.
+- Release worktree'sinde Docker ortamı ayağa kaldırıldıysa `docker compose down -v --rmi local`. Volume'lar yalnızca bu geçici worktree'ye aittir (`COMPOSE_PROJECT_NAME=<proje>-release`); development'ınkilere dokunulmaz. Önce `.env`'deki adın `<proje>-release` olduğunu doğrula.
 
 ## 7. Bildir
 Kısa özet: sürüm, etiket, PR'lar, rapor yolları, yapılan temizlik.

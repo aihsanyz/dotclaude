@@ -45,3 +45,12 @@ Her biri için (`main`, `development`):
 
 ## 6. Bildir
 Kısa özet: branch, worktree yolu, taban commit'i, varsa erişim adresleri ve doğrulama sonucu.
+
+## 7. Geliştirme sırasında: `stack.toml`'u güncel tut
+Bu işte aşağıdakilerden biri değişirse `.claude/stack.toml`'u **aynı commit'te** güncelle; stack özeti değiştiyse proje `CLAUDE.md`'sini de:
+- `compose.yaml`'da servis eklendi, silindi veya yeniden adlandırıldı; bir servisin rolü değişti (app, worker, data).
+- Bir veri servisinin image'ı veya motoru değişti. **Ana sürüm yükseltmesi** (ör. postgres 17 → 18) mevcut volume'larla açılmaz: değişiklikten önce kullanıcıya bildir ve yükseltme planı sun.
+- Migration, test veya seed komutu, migration dizini ya da komutların çalıştığı servis değişti.
+- HTTP servislerinin portu (`.env` değişkeni) veya sağlık kontrolü yolu değişti.
+
+Güncelleme doğruluğu `/merge`'deki provada test edilir: `stack.toml`'daki bir komut veya servis yanlışsa prova başarısız olur. Reviewer da `compose.yaml` ile `stack.toml`'un uyumunu `/push`'ta denetler.
