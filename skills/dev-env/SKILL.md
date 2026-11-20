@@ -9,26 +9,35 @@ Her projenin `development` ortamı ana repo klasöründe, `development` branch'i
 
 **Tanımlar**
 - **Proje adı:** Ana repo dizininin adı (`db.sh` bunu `[a-z0-9_]`'e çevirir).
-- **Ortak servisler:** Projenin `CLAUDE.md`'sinde belirtilir; yoksa `.env.example`'daki `DB_*` (postgres/mysql) ve `REDIS_*` değişkenlerinden çıkar.
-- **Migration ve seed komutları:** Projenin `CLAUDE.md`'sinde tanımlıdır; tanımlı değilse kurulumda bul ve proje `CLAUDE.md`'sine ekle.
+- **Standart işlem:** `~/.claude/scripts/deploy.sh`. Merge sonrası güncelleme (`apply`) ile merge öncesi prova (`rehearse`) aynı adımları aynı sırayla çalıştırır; bu skill'de adımları elle tekrarlama.
+- **Proje ayarları:** Projede commit edilen `.claude/devenv.conf`. Hem prova hem güncelleme bu dosyayı okur:
+
+```
+SHARED_SERVICES="postgres redis"   # ortak servisler: postgres, mysql, redis
+APP_SERVICE="app"                  # migration ve testlerin çalıştığı compose servisi
+MIGRATE_CMD="..."                  # container içinde migration komutu (yoksa boş)
+MIGRATIONS_DIR="migrations"        # migration dosyalarının dizini
+SEED_CMD="..."                     # yalnızca ilk kurulumda çalışır (yoksa boş)
+TEST_CMD="..."                     # provada çalışan testler
+HEALTH_PORT_VAR="APP_PORT"         # sağlık kontrolünün portunu tutan .env değişkeni
+HEALTH_PATH="/"                    # sağlık kontrolü yolu
+HEALTH_TIMEOUT=90                  # saniye
+```
 
 ## kurulum (ortam yoksa)
 1. Ana repo klasörü `development`'ta olmalı. Değilse ve çalışma alanı temizse `git switch development`; temiz değilse dur ve sor.
 2. `development`'ı `origin/development` ile fast-forward eşitle.
-3. `.env` yoksa `.env.example`'dan oluştur; `COMPOSE_PROJECT_NAME=<proje>-dev` yaz. Portlar `.env.example`'daki varsayılanlar olarak kalır; bu portlar development ortamına ayrılmıştır.
-4. Her ortak servis için `~/.claude/scripts/db.sh init <engine> <proje> --env-file <ana repo>/.env`.
-5. `docker compose build`, `docker compose up -d`, ardından migration ve varsa seed komutu (container içinde).
-6. `local.md`'deki yerel ağ ve Tailscale adreslerini `curl` ile doğrula ve bildir.
+3. `.claude/devenv.conf` yoksa projeyi inceleyip değerleri bul, dosyayı oluştur ve kullanıcıya göster. Bu bir proje değişikliğidir: `/start-task chore/devenv-config` ile bir worktree'de commit edilir ve normal akışla (`/push`, `/merge`) development'a girer; kurulum o merge'den sonra devam eder.
+4. `.env` yoksa `.env.example`'dan oluştur; `COMPOSE_PROJECT_NAME=<proje>-dev` yaz. Portlar `.env.example`'daki varsayılanlar olarak kalır; bu portlar development ortamına ayrılmıştır.
+5. Her ortak servis için `~/.claude/scripts/db.sh init <engine> <proje> --env-file <ana repo>/.env`.
+6. `~/.claude/scripts/deploy.sh apply <ana repo>`, ardından varsa `SEED_CMD` (container içinde).
+7. `local.md`'deki yerel ağ ve Tailscale adreslerini bildir.
 
 ## güncelle (her merge'den sonra)
 1. `development`'ı `origin/development` ile fast-forward eşitle.
-2. `docker compose build`. Başarısız olursa dur: eski container'lar çalışmaya devam eder; hatayı bildir.
-3. Migration varsa önce yedek al: ortak SQL servisi için `db.sh backup <engine> <proje>`.
-4. Migration'ı çalıştır (yeni image ile, ör. `docker compose run --rm <servis> <migration komutu>`).
-   - Başarısız olursa **düzeltmeye çalışma**: hatayı, hangi migration'da durduğunu ve alınan yedeğin yolunu bildir. Düzeltme `/start-task fix/...` ile yapılır. Geri yükleme yalnızca kullanıcı isterse yapılır.
-5. `docker compose up -d` (yalnızca değişen servisler yeniden başlar).
-6. Adresleri `curl` ile doğrula; servis ayağa kalkmazsa son logları (`docker compose logs --tail 50`) bildir.
-7. Güncelleme `/merge` dışında çalıştırıldıysa (ör. "tekrar dene") ve başarılıysa (build, migration, `up` ve `curl` hepsi geçtiyse): hangi sorunun çözüldüğü belli olmadığından bekleyen worktree'lerin hiçbirini otomatik silme. `merge` skill'inin 5. adımındaki koşulu sağlayanları kullanıcıya liste halinde sor ve yalnızca seçilenleri temizle. `/merge` içinden çağrıldıysa temizliği `merge` skill'i yapar.
+2. `~/.claude/scripts/deploy.sh apply <ana repo>`. Adımlar: kontroller, ortam değişkeni eşitleme, yedek, build, migration, `up`, sağlık kontrolü. `RESULT: ok` başarıdır.
+3. Başarısız olursa script'in gösterdiği adımı ve son çıktıyı bildir; migration hatasında **düzeltmeye çalışma**, alınan yedeğin yolunu ver. Build hatasında eski container'lar çalışmaya devam eder. Seçenekler için `merge` skill'inin 6. adımına bak.
+4. Güncelleme `/merge` dışında çalıştırıldıysa (ör. "tekrar dene") ve başarılıysa: hangi sorunun çözüldüğü belli olmadığından bekleyen worktree'lerin hiçbirini otomatik silme. `merge` skill'inin 7. adımındaki koşulu sağlayanları kullanıcıya liste halinde sor ve yalnızca seçilenleri temizle. `/merge` içinden çağrıldıysa temizliği `merge` skill'i yapar.
 
 ## durum / log / yeniden-başlat
 - Durum: `docker compose ps`, son commit (`git log -1 --oneline`), adreslerin `curl` sonucu.

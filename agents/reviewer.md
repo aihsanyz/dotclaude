@@ -37,6 +37,8 @@ Sen bir kod inceleyicisisin. Görevin, mevcut branch'teki değişiklikleri `orig
 - Branch `main` veya `development` değil; `origin/development`'tan açılmış ve güncel (`git merge-base --is-ancestor origin/development HEAD`).
 - Commit mesajları: Conventional Commits başlığı + 1-2 maddelik kısa açıklama; emoji ve AI imzası (`Co-Authored-By`, "Generated with") yok.
 - Kapsam dışı değişiklik veya istenmemiş refactor yok.
+- `origin/development`'ta zaten bulunan migration dosyaları değiştirilmemiş veya silinmemiş (dizin `.claude/devenv.conf`'taki `MIGRATIONS_DIR`): `git diff --name-status origin/development...HEAD -- <dizin>` yalnızca yeni (`A`) dosya göstermeli. Aksi halde Kritik; düzeltme yeni bir migration'la yapılır.
+- Yeni bir ortam değişkeni eklendiyse `.env.example`'da varsayılanı var mı? Yoksa (ör. gizli anahtar) raporda belirt: merge öncesi development `.env`'ine değerin girilmesi gerekir.
 
 **Docker ve ağ**
 - Host'a kurulum gerektiren bir şey eklenmemiş; tüm komutlar container içinde çalışacak şekilde.

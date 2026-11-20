@@ -3,7 +3,9 @@
 #
 #   db.sh init    <engine> <project> --env-file <path>          project user + <project>_dev
 #   db.sh clone   <engine> <project> <branch> --env-file <path> worktree copy of <project>_dev
-#   db.sh drop    <engine> <project> <branch>                   drop a worktree database
+#   db.sh refresh <engine> <project> <branch> --env-file <path> back up the worktree database,
+#                                                               then re-clone it from <project>_dev
+#   db.sh drop    <engine> <project> <branch>                   drop a worktree database and its backup
 #   db.sh backup  <engine> <project>                            dump <project>_dev (keeps last 5)
 #   db.sh restore <engine> <project> <dump-file> --yes          restore <project>_dev from a dump
 #   db.sh list    [engine]                                      list databases / redis users
@@ -143,7 +145,7 @@ cmd_clone() {
 }
 
 cmd_drop() {
-  local engine=$1 proj br; proj=$(slug "$2"); br=$(slug "$3")
+  local engine=$1 proj br; proj=$(slug "$2"); br=$(slug "$3"); local keep=${4:-}
   [[ $br != dev ]] || die "refusing to drop the development database"
   local db="${proj}_${br}"; db=${db:0:63}
   ensure_up "$engine"
@@ -154,21 +156,42 @@ cmd_drop() {
       dc exec -T -e REDISCLI_AUTH="$REDIS_ADMIN_PASSWORD" redis sh -c \
         "redis-cli --no-auth-warning --scan --pattern '$proj:$br:*' | xargs -r -n 500 redis-cli --no-auth-warning unlink >/dev/null" ;;
   esac
+  [[ $keep == --keep-backup ]] || rm -f "$(worktree_backup "$engine" "$db")"
   echo "drop: $engine '$db' removed"
+}
+
+dump_db() {  # dump_db <engine> <database> <output.sql.gz>
+  local engine=$1 db=$2 out=$3
+  mkdir -p "$(dirname "$out")"; chmod 700 "$(dirname "$out")"
+  case $engine in
+    postgres) dc exec -T postgres pg_dump -U admin --clean --if-exists --no-owner "$db" | gzip > "$out" ;;
+    mysql)    dc exec -T -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql mysqldump -uroot --single-transaction --routines --triggers --events "$db" | gzip > "$out" ;;
+  esac
+  chmod 600 "$out"
+}
+
+worktree_backup() { echo "$BACKUP_DIR/$1/worktrees/$2.sql.gz"; }
+
+cmd_refresh() {
+  local engine=$1 proj br; proj=$(slug "$2"); br=$(slug "$3"); local envf=$4
+  [[ $br != dev ]] || die "refusing to refresh the development database"
+  local db="${proj}_${br}"; db=${db:0:63}
+  ensure_up "$engine"
+  case $engine in
+    postgres) if pg_db_exists "$db"; then dump_db postgres "$db" "$(worktree_backup postgres "$db")"; echo "refresh: backed up $db"; fi ;;
+    mysql)    if my_db_exists "$db"; then dump_db mysql "$db" "$(worktree_backup mysql "$db")"; echo "refresh: backed up $db"; fi ;;
+  esac
+  cmd_drop "$engine" "$2" "$3" --keep-backup >/dev/null
+  cmd_clone "$engine" "$2" "$3" "$envf"
 }
 
 cmd_backup() {
   local engine=$1 proj; proj=$(slug "$2")
   local dir="$BACKUP_DIR/$engine" ts; ts=$(date +%Y%m%d-%H%M%S)
-  mkdir -p "$dir"; chmod 700 "$dir"
   local out="$dir/${proj}_dev-$ts.sql.gz"
   ensure_up "$engine"
-  case $engine in
-    postgres) dc exec -T postgres pg_dump -U admin --clean --if-exists --no-owner "${proj}_dev" | gzip > "$out" ;;
-    mysql)    dc exec -T -e MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql mysqldump -uroot --single-transaction --routines --triggers --events "${proj}_dev" | gzip > "$out" ;;
-    redis)    die "redis has no per-project backup; data is persisted with appendonly" ;;
-  esac
-  chmod 600 "$out"
+  [[ $engine != redis ]] || die "redis has no per-project backup; data is persisted with appendonly"
+  dump_db "$engine" "${proj}_dev" "$out"
   ls -1t "$dir"/"${proj}"_dev-*.sql.gz | tail -n +$((KEEP_BACKUPS + 1)) | xargs -r rm -f
   echo "backup: $out"
 }
@@ -202,7 +225,7 @@ cmd_list() {
 
 main() {
   local cmd=${1:-} envf=""
-  [[ -n $cmd ]] || { sed -n '2,14p' "$0"; exit 2; }
+  [[ -n $cmd ]] || { sed -n '2,16p' "$0"; exit 2; }
   shift
   local args=()
   while [[ $# -gt 0 ]]; do
@@ -221,6 +244,8 @@ main() {
              cmd_init "$engine" "${args[1]}" "$envf" ;;
     clone)   [[ -n $envf && -n ${args[2]:-} ]] || die "usage: db.sh clone <engine> <project> <branch> --env-file <path>"
              cmd_clone "$engine" "${args[1]}" "${args[2]}" "$envf" ;;
+    refresh) [[ -n $envf && -n ${args[2]:-} ]] || die "usage: db.sh refresh <engine> <project> <branch> --env-file <path>"
+             cmd_refresh "$engine" "${args[1]}" "${args[2]}" "$envf" ;;
     drop)    [[ -n ${args[2]:-} ]] || die "usage: db.sh drop <engine> <project> <branch>"
              cmd_drop "$engine" "${args[1]}" "${args[2]}" ;;
     backup)  [[ -n ${args[1]:-} ]] || die "usage: db.sh backup <engine> <project>"

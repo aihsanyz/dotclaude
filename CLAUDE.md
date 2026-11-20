@@ -27,7 +27,7 @@
 - Geliştirme ilerledikçe commit at. Akışları skill'lerle yürüt, adımları elle tekrarlama; kapılar atlanmaz:
   - `/start-task`: yeni iş için worktree, branch, worktree veritabanı ve Docker ortamı.
   - `/push`: reviewer kapısı, ardından push.
-  - `/merge`: auditor kapısı, PR, `development`'a squash merge, development ortamının güncellenmesi ve temizlik.
+  - `/merge`: entegrasyon provası ve auditor kapısı, PR, `development`'a squash merge, development ortamının güncellenmesi ve temizlik.
   - `/release`: auditor + releaser, kullanıcı onayı, `main`'e merge commit, `vX.Y.Z` etiketi. Yalnızca kullanıcı sürüm çıkarmak istediğinde.
 - Kullanıcının bir skill'i çağırması veya aynı işi doğal dille istemesi o adımın onayıdır.
 - **İstisna:** `~/.claude` (dotclaude) reposu bu akıştan muaftır: worktree, `development`, PR ve skill'ler kullanılmaz; değişiklikler doğrudan `main`'e commit edilip push edilir. Repo public olduğu için push öncesi `~/.claude/scripts/scan.sh secrets origin/main..HEAD` çalıştır; bulgu varsa push yapma. `.gitignore` beyaz listedir; yeni bir dosyayı eklemeden önce gizli veya makineye özel bilgi içermediğini doğrula.
@@ -53,11 +53,13 @@
 
 ## Development Ortamı ve Ortak Servisler
 - Her projenin `development` ortamı ana repo klasöründe (`development` branch'i) sürekli ayakta durur: `.env.example`'daki varsayılan portlar ve `COMPOSE_PROJECT_NAME=<proje>-dev`. Her merge'den sonra güncellenir; yönetimi `/dev-env`. `main` için ortam tutulmaz.
-- Merge sonrası migration otomatik çalışır, öncesinde `<proje>_dev` yedeklenir. Migration başarısız olursa düzeltmeye çalışma, bildir; düzeltme `/start-task fix/...` ile yapılır, geri yükleme yalnızca kullanıcı isterse.
+- **ÖNEMLİ:** Merge sonrası development'ta tek bir standart işlem çalışır (`~/.claude/scripts/deploy.sh apply`: ortam değişkeni eşitleme, yedek, build, migration, `up`, sağlık kontrolü). Merge'den önce aynısı worktree'de, güncel `<proje>_dev` kopyasıyla provadan geçer (`deploy.sh rehearse`); prova geçmeden merge yapılmaz. Hatalar merge öncesinde yakalanır ve aynı branch'te düzeltilir.
+- Merge sonrası yine de hata olursa düzeltmeye çalışma, bildir; seçenekler `/merge` skill'indedir, geri yükleme yalnızca kullanıcı isterse.
+- Migration'lar: development'ta uygulanmış bir migration asla düzenlenmez, düzeltme yeni bir migration'la yapılır. Henüz merge edilmemiş branch'in kendi migration'ları düzenlenebilir. MySQL'de yarım kalmış bir migration için nasıl ilerleneceğini kullanıcıya sor.
 - PostgreSQL, MySQL ve Redis ortak stack'te çalışır (`~/.claude/infra/compose.yaml`, yönetimi `~/.claude/scripts/db.sh`). Projeler kendi veritabanı container'ını tanımlamaz, dış `shared` ağına katılır ve servislere adıyla bağlanır (`postgres`, `mysql`, `redis`). Farklı bir ana sürüm gerekiyorsa proje kendi container'ını kullanır.
 - Veritabanları: development için `<proje>_dev`, her worktree için `<proje>_<branch>` (`<proje>_dev`'in kopyası); Redis'te `<proje>:<branch>:` prefix'i. Bağlantı bilgilerini `db.sh` `.env`'e yazar (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DATABASE_URL`, `REDIS_URL`, `REDIS_PREFIX`); proje bunları okur.
 - Worktree veritabanları merge sonrası sormadan silinir; `<proje>_dev` asla otomatik silinmez veya sıfırlanmaz.
-- Projenin `CLAUDE.md`'si kullandığı ortak servisleri, migration ve seed komutlarını belirtir.
+- Proje ayarları (ortak servisler, migration, seed, test ve sağlık kontrolü komutları) projede commit edilen `.claude/devenv.conf` dosyasındadır; prova ve güncelleme aynı dosyayı okur.
 
 ## Ağ Erişimi
 - Uygulama ve arayüz servisleri yerel ağdan ve Tailscale'den erişilebilir olmalı:
