@@ -30,11 +30,11 @@ Her biri için (`main`, `development`):
   - `--no-track` zorunlu: branch'in upstream'i `origin/development` olmamalı.
 - Git komutlarında yolları mutlak yaz ve shell değişkeni kullanma; guard hook değişkenli yolları doğrulayamaz.
 
-## 5. Docker ortamı (yalnızca compose dosyası varsa)
+## 5. Docker ortamı (yalnızca worktree'de bir compose dosyası varsa: `compose*.yaml`, `compose*.yml`, `docker-compose*.yml`, `docker-compose*.yaml`)
 - Proje `CLAUDE.md`'sinde `## Komutlar` bölümü yoksa dur: proje henüz hazırlanmamış, önce `/initer` çalıştırılmalı (bu skill `initer` içinden çağrıldıysa bu kontrolü atla).
-- Compose dosyasında servis yoksa (`docker compose config --services` boş; `initer` iskeleti) yalnızca `.env`'i `.env.example`'dan oluştur ve `COMPOSE_PROJECT_NAME`'i aşağıdaki gibi yaz; kalan adımları atla.
-- `.env` yoksa `.env.example`'dan kopyala; `.env`'in `.gitignore`'da olduğunu doğrula.
+- `.env` yoksa `.env.example`'dan kopyala; `.env`'in `.gitignore`'da olduğunu doğrula. `COMPOSE_FILE` `.env`'de olduğu için compose komutları bu adımdan önce çalıştırılmaz.
 - `COMPOSE_PROJECT_NAME=<proje>-<branch adındaki / yerine ->` yaz; container ve volume'lar (veri servisleri dahil) development ortamından ayrı kalır.
+- Compose dosyasında servis yoksa (`docker compose config --services` boş; `initer` iskeleti) kalan adımları atla.
 - `.env.example`'daki `*_PORT` değişkenleri için boş port seç (`ss -tlnp`, `docker ps --format '{{.Ports}}'`) ve `.env`'e yaz. `.env.example`'daki varsayılan portları kullanma, onlar development ortamına ayrılmıştır; çalışan diğer worktree'lerle de çakışmamalı.
 - **Bellek:** Her worktree kendi veri servislerini çalıştırır (MySQL ~450 MB, PostgreSQL ~60 MB). Açmadan önce `free -m` ile kullanılabilir belleğe bak; yetersizse kullanıcıyı uyar ve kullanılmayan bir worktree'nin durdurulmasını öner.
 - Veritabanını hazırla: veri servislerini başlat (`docker compose up -d --wait <image ile tanımlı servisler>`), sonra `## Komutlar`'daki `migrate` ve `seed` komutlarını `docker compose run --rm <service> sh -c "<komut>"` ile çalıştır. Worktree temiz bir veritabanı ve seed verisiyle başlar.

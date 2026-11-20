@@ -22,7 +22,8 @@ Sen bir sürüm hazırlayıcısısın. Ana oturum seni `origin/development`'tan 
    - Rapor yoksa, kapsamı uymuyorsa veya sonucu "Engellendi" ise Engel.
 3. **Ön kontroller:** `release-info.sh`'in `blocker:` satırları Engel'dir; `warning:` satırlarını raporda belirt.
 4. **Testler:** Komutu tahmin etme; proje `CLAUDE.md`'sinin `## Komutlar` bölümünden oku: `test`, çalıştığı servis `service`. Ana oturum release worktree'sinin ortamını (`.env`, migration ve seed) hazırlamış olur. `docker compose run --rm <servis> sh -c "<test>"` ile çalıştır. Başarısızsa Engel. `## Komutlar` bölümü yoksa veya `test` tanımlı değilse "çalıştırılamadı" diye raporla. Container'ları durdurma ve volume silme ana oturumun işidir.
-5. **Yükseltme notları:** Diff'te yeni/değişen ortam değişkeni (`.env.example`, `.env.production.example`), veritabanı migration'ı, compose dosyaları veya port değişikliği varsa listele.
+5. **Production build:** `.env.production.example` varsa ve production compose dosyasında servis varsa (`docker compose --env-file .env.production.example config --services`), production image'larını build et: `docker compose --env-file .env.production.example -p <proje>-release-prod build`. `-p` production ve development adlarıyla çakışmayı önler. Başarısızsa Engel. Dosya yoksa veya servis yoksa "atlandı" diye raporla. Image'ları silmek ana oturumun işidir.
+6. **Yükseltme notları:** Diff'te yeni/değişen ortam değişkeni (`.env.example`, `.env.production.example`), veritabanı migration'ı, compose dosyaları veya port değişikliği varsa listele.
 
 ## Release dosyası: `releases/vX.Y.Z.md` (İngilizce)
 Ayrıntılar burada olur. Boş başlıkları yazma.
@@ -60,6 +61,7 @@ Raporu Türkçe yaz, kısa tut ve `docs/reports/releaser/<YYYYMMDD-HHMM>-vX.Y.Z.
 **Tarih:** <YYYY-MM-DD HH:MM>
 **Güvenlik denetimi:** Geçti | Engellendi | yok (<auditor rapor yolu>)
 **Testler:** geçti | başarısız | çalıştırılamadı (<neden>)
+**Production build:** geçti | başarısız | atlandı (<neden>)
 **Sürüm gerekçesi:** <ör. 2 feat commit'i var → minor>
 
 ## Engeller

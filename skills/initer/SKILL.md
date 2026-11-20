@@ -17,8 +17,8 @@ Klasör kullanıcının oturumu açtığı dizindir (`pwd`); proje adı klasör 
 
 | Durum | Akış |
 |---|---|
-| `.git` yok (klasör boş veya dolu) | **A. Git'e alınmamış klasör** |
-| Git var, `origin` yok | **B. Uzak reposu olmayan proje** |
+| `.git` yok (klasör boş veya dolu) ya da git var ama hiç commit yok | **A. Git'e alınmamış klasör** |
+| Git ve commit var, `origin` yok | **B. Uzak reposu olmayan proje** |
 | Git ve `origin` var | **C. Mevcut proje** |
 
 ## 2. İskelet dosyaları
@@ -61,14 +61,16 @@ Mevcut projede zaten bir compose dosyası (`compose.yaml`, `docker-compose.yml` 
 3. "GitHub reposu", ardından "Development ortamı".
 
 ## B. Uzak reposu olmayan proje
+Mevcut geçmiş olduğu gibi gönderilir; iskelet `main`'e doğrudan değil, C akışıyla bir PR üzerinden eklenir (guard hook commit'i olan `main`'e doğrudan commit'e izin vermez).
 1. Varsayılan branch `main` değilse (ör. `master`) yeniden adlandırmak için sor.
-2. Çalışma alanı temiz değilse dur ve sor. İskelet dosyalarını ekle ve commit'le: `chore: add project skeleton`.
-3. "GitHub reposu", ardından "Development ortamı".
+2. Çalışma alanı temiz değilse dur ve sor.
+3. Gizli bilgi kontrolü: `~/.claude/scripts/scan.sh secrets main` (bütün geçmiş) ve `scan.sh fs`. Bulgu varsa dur ve sor; repo henüz hiçbir yere gönderilmedi.
+4. "GitHub reposu" (`main` olduğu gibi push edilir, `development` oluşturulur), ardından **C**.
 
 ## C. Mevcut proje
 1. `git fetch origin --prune`. `origin/main` yoksa dur ve sor. `origin/development` yoksa oluştur: `git push origin origin/main:refs/heads/development`.
 2. Ana klasörün çalışma alanı temiz değilse dur ve sor; temizse `git switch development` ve `origin/development` ile eşitle.
-3. Eksik iskelet dosyası varsa: `/tasker chore/project-setup` ile worktree aç (`## Komutlar` henüz olmadığından tasker'ın init ön koşulunu atla), eksikleri ekle, `chore: add project skeleton` ile commit'le, normal `/push` ve `/merge` akışı.
+3. Eksik iskelet dosyası varsa: `/tasker chore/project-setup` ile worktree aç (`## Komutlar` henüz olmadığından tasker'ın init ön koşulunu atla), eksikleri ekle, `chore: add project skeleton` ile commit'le. Worktree'de `.env` yoksa (iskelet compose dosyaları tasker'dan sonra eklendi) tasker'ın 5. adımını yeniden uygula; prova `.env` olmadan çalışmaz. Ardından normal `/push` ve `/merge` akışı.
 4. "Development ortamı".
 
 ## GitHub reposu (A, B)

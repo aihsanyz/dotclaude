@@ -42,9 +42,11 @@ Tüm git komutlarında `git -C <mutlak yol>` kullan; shell değişkeniyle yol ku
 - `git -C <ana repo> push origin vX.Y.Z`
 
 ## 6. Temizlik
+Docker kaynakları worktree silinmeden önce kaldırılır; compose dosyaları ve `.env` worktree'dedir.
+- Release worktree'sinde Docker ortamı ayağa kaldırıldıysa: önce `.env`'deki adın `<proje>-release` olduğunu doğrula, sonra `docker compose down -v --rmi local`. Volume'lar yalnızca bu geçici worktree'ye aittir; development'ınkilere dokunulmaz.
+- Releaser production image'ını build ettiyse: `docker compose --env-file .env.production.example -p <proje>-release-prod down --rmi local`.
 - Release worktree'sini kaldır (`git worktree remove`, `--force` yok).
 - `release/vX.Y.Z` branch'ini yerelde ve uzakta sil (uzakta yoksa hatayı yok say).
-- Release worktree'sinde Docker ortamı ayağa kaldırıldıysa `docker compose down -v --rmi local`. Volume'lar yalnızca bu geçici worktree'ye aittir (`COMPOSE_PROJECT_NAME=<proje>-release`); development'ınkilere dokunulmaz. Önce `.env`'deki adın `<proje>-release` olduğunu doğrula.
 
 ## 7. Bildir
 Kısa özet: sürüm, etiket, PR'lar, rapor yolları, yapılan temizlik.

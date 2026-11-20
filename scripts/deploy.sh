@@ -15,6 +15,8 @@
 #            origin/development unchanged, development .env can take the new variables
 #            apply: on development and equal to origin/development, clean tree
 #   env      add variables from .env.example missing in .env (fails if a new one has no default)
+#   compose  docker compose config; rehearse also checks the production file with
+#            .env.production.example (prodcfg). No services (initer skeleton): stop here, ok.
 #   reset    rehearse only: remove the worktree's containers and volumes (fresh database)
 #   build    docker compose build
 #   migrate  migrate command (after starting the image-only services such as databases)
@@ -31,7 +33,7 @@ set -uo pipefail
 
 mode=${1:-}; target=${2:-}; bootstrap=0
 [[ ${3:-} == --bootstrap ]] && bootstrap=1
-[[ $mode == rehearse || $mode == apply ]] && [[ -d $target ]] || { sed -n '2,29p' "$0" >&2; exit 2; }
+[[ $mode == rehearse || $mode == apply ]] && [[ -d $target ]] || { sed -n '2,31p' "$0" >&2; exit 2; }
 dir=$(cd "$target" && pwd) || exit 2
 cd "$dir" || exit 2
 
@@ -134,19 +136,12 @@ EOF
 
 # ---- checks -------------------------------------------------------------------------------
 [[ ${C[section]:-} == yes ]] || fail checks "no '## Komutlar' section in CLAUDE.md (run the initer skill)"
-[[ -f .env ]] || fail checks "missing .env"
+[[ -f .env ]] || fail checks "missing .env (create it as in step 5 of the tasker skill)"
 name=$(compose_name "$dir"); dev_name=$(compose_name "$main_dir")
 [[ -n $name ]] || fail checks "no COMPOSE_PROJECT_NAME in .env"
 dirty=$(git status --porcelain --untracked-files=normal | grep -vE '^.. (docs/reports/|\.env$)' || true)
 [[ -z $dirty ]] || fail checks "uncommitted changes; the deployed state must be committed"
 git fetch -q origin || fail checks "git fetch failed"
-docker compose config -q >/dev/null 2>&1 || fail checks "docker compose config failed"
-svc_list=$(services)
-if [[ -n $svc_list ]]; then
-  app=${C[service]:-$(awk '$2 == "built" {print $1; exit}' <<<"$svc_list")}
-  [[ -n $app ]] || fail checks "no service to run the commands in (set '- service:' in CLAUDE.md)"
-fi
-
 if [[ $mode == rehearse ]]; then
   [[ $is_dev == 0 && -n $branch && $branch != main && $branch != development ]] || fail checks "rehearse runs in a feature worktree"
   [[ $name != "$dev_name" ]] || fail checks "the worktree uses the development COMPOSE_PROJECT_NAME ($dev_name)"
@@ -169,6 +164,18 @@ echo "STEP checks   ok"
 empty=$(env_keys sync "$dir/.env")
 [[ -z $empty ]] || fail env "new variables without a default in .env.example need values: $empty"
 echo "STEP env      ok"
+
+# ---- compose: validated after the env sync, since .env may only now get COMPOSE_FILE --------
+step compose docker compose config -q
+# Rehearse only: the production compose file must also resolve with the production variables.
+if [[ $mode == rehearse && -f .env.production.example ]]; then
+  step prodcfg docker compose --env-file .env.production.example config -q
+fi
+svc_list=$(services)
+if [[ -n $svc_list ]]; then
+  app=${C[service]:-$(awk '$2 == "built" {print $1; exit}' <<<"$svc_list")}
+  [[ -n $app ]] || fail compose "no service to run the commands in (set '- service:' in CLAUDE.md)"
+fi
 
 # Record what was rehearsed so the merge can check that nothing moved since.
 record_rehearsal() {
