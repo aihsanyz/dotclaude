@@ -8,19 +8,19 @@ description: Projenin sürekli ayakta duran development ortamını yönetir; ilk
 Her projenin `development` ortamı ana repo klasöründe, `development` branch'inde sürekli ayakta durur. `main` için ortam tutulmaz. Tüm git komutlarında `git -C <mutlak yol>` kullan.
 
 **Tanımlar**
-- **Proje adı:** Ana repo dizininin adı (`db.sh` bunu `[a-z0-9_]`'e çevirir).
+- **Proje adı:** Ana repo dizininin adı.
+- **Veri servisleri:** Veritabanı ve önbellek servisleri (PostgreSQL, MySQL, MariaDB, MongoDB, Redis vb.) projenin compose dosyasında tanımlıdır. Development ve her worktree kendi container'larını ve volume'larını kullanır; portları yayınlanmaz. Bağlantı bilgileri resmi image değişkenleriyle (`POSTGRES_*`, `MYSQL_*`, `MARIADB_*`, `MONGO_INITDB_*`) `.env.example`'da durur.
 - **Standart işlem:** `~/.claude/scripts/deploy.sh`. Merge sonrası güncelleme (`apply`) ile merge öncesi prova (`rehearse`) aynı adımları aynı sırayla çalıştırır; bu skill'de adımları elle tekrarlama.
 - **Proje ayarları:** Projede commit edilen `.claude/devenv.conf`. Hem prova hem güncelleme bu dosyayı okur:
 
 ```
-SHARED_SERVICES="postgres redis"   # ortak servisler: postgres, mysql, redis
+DATA_SERVICES="db:postgres cache:redis"  # compose servisi:motor; kopyalanabilen: postgres, mysql, mariadb, mongodb
 APP_SERVICE="app"                  # migration ve testlerin çalıştığı compose servisi
 MIGRATE_CMD="..."                  # container içinde migration komutu (yoksa boş)
 MIGRATIONS_DIR="migrations"        # migration dosyalarının dizini
 SEED_CMD="..."                     # yalnızca ilk kurulumda çalışır (yoksa boş)
 TEST_CMD="..."                     # provada çalışan testler
-HEALTH_PORT_VAR="APP_PORT"         # sağlık kontrolünün portunu tutan .env değişkeni
-HEALTH_PATH="/"                    # sağlık kontrolü yolu
+HEALTH_CHECKS="APP_PORT:/ API_PORT:/health"  # PORT_DEĞİŞKENİ:yol listesi; HTTP sunmayan projede boş
 HEALTH_TIMEOUT=90                  # saniye
 ```
 
@@ -29,9 +29,8 @@ HEALTH_TIMEOUT=90                  # saniye
 2. `development`'ı `origin/development` ile fast-forward eşitle.
 3. `.claude/devenv.conf` yoksa projeyi inceleyip değerleri bul, dosyayı oluştur ve kullanıcıya göster. Bu bir proje değişikliğidir: `/start-task chore/devenv-config` ile bir worktree'de commit edilir ve normal akışla (`/push`, `/merge`) development'a girer; kurulum o merge'den sonra devam eder.
 4. `.env` yoksa `.env.example`'dan oluştur; `COMPOSE_PROJECT_NAME=<proje>-dev` yaz. Portlar `.env.example`'daki varsayılanlar olarak kalır; bu portlar development ortamına ayrılmıştır.
-5. Her ortak servis için `~/.claude/scripts/db.sh init <engine> <proje> --env-file <ana repo>/.env`.
-6. `~/.claude/scripts/deploy.sh apply <ana repo>`, ardından varsa `SEED_CMD` (container içinde).
-7. `local.md`'deki yerel ağ ve Tailscale adreslerini bildir.
+5. `~/.claude/scripts/deploy.sh apply <ana repo>` (veri servislerini de başlatır), ardından varsa `SEED_CMD` (container içinde).
+6. `local.md`'deki yerel ağ ve Tailscale adreslerini bildir.
 
 ## güncelle (her merge'den sonra)
 1. `development`'ı `origin/development` ile fast-forward eşitle.
@@ -45,5 +44,5 @@ HEALTH_TIMEOUT=90                  # saniye
 - Yeniden başlatma: `docker compose restart [servis]`.
 
 ## yedek / geri-yükle
-- Yedek: `db.sh backup <engine> <proje>` (son 5 yedek saklanır, `~/infra/shared/backups/`).
-- Geri yükleme `<proje>_dev`'in üzerine yazar ve geri alınamaz: hangi yedeğin kullanılacağını göster, kullanıcının açık onayını al, sonra `db.sh restore <engine> <proje> <dosya> --yes`.
+- Yedek: `~/.claude/scripts/db.sh backup <ana repo> [servis]` (servis başına son 5 yedek, `~/infra/backups/<proje>/<servis>/`). Listesi: `db.sh backups <ana repo>`.
+- Geri yükleme development verisinin üzerine yazar ve geri alınamaz: hangi yedeğin kullanılacağını göster, kullanıcının açık onayını al, sonra `db.sh restore <ana repo> <servis> <dosya> --yes`.

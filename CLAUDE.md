@@ -5,7 +5,7 @@
 - Kısa ve net yanıt ver; ne değiştiğini ve neyin doğrulandığını söyle.
 
 ## Güvenlik
-- **ÖNEMLİ:** Geri alınamaz işlemlerden önce mutlaka sor: `rm -rf`, `git reset --hard`, `git push --force`, `git clean -fd`, `docker compose down -v`, `docker volume rm`, `docker system prune`, veritabanı silme/sıfırlama (merge sonrası worktree veritabanları hariç).
+- **ÖNEMLİ:** Geri alınamaz işlemlerden önce mutlaka sor: `rm -rf`, `git reset --hard`, `git push --force`, `git clean -fd`, `docker compose down -v`, `docker volume rm`, `docker system prune`, veritabanı silme/sıfırlama (merge sonrası worktree veritabanları ve volume'ları hariç).
 - Gizli bilgileri (`.env`, token, parola) çıktıya yazdırma ve commit etme.
 
 ## Çalışma Akışı
@@ -25,7 +25,7 @@
 - Git'li projelerde `main` ve `development` ile çalışılır; `development` yoksa `main`'den oluştur ve uzağa gönder.
 - Her iş `origin/development`'tan açılan bir worktree branch'inde yapılır (T3 Code'da da taban `origin/development`, `main` değil). Yerel `main` ve `development` uzaktakiyle her zaman fast-forward eşit tutulur.
 - Geliştirme ilerledikçe commit at. Akışları skill'lerle yürüt, adımları elle tekrarlama; kapılar atlanmaz:
-  - `/start-task`: yeni iş için worktree, branch, worktree veritabanı ve Docker ortamı.
+  - `/start-task`: yeni iş için worktree, branch, development verisinin kopyası ve Docker ortamı.
   - `/push`: reviewer kapısı, ardından push.
   - `/merge`: entegrasyon provası ve auditor kapısı, PR, `development`'a squash merge, development ortamının güncellenmesi ve temizlik.
   - `/release`: auditor + releaser, kullanıcı onayı, `main`'e merge commit, `vX.Y.Z` etiketi. Yalnızca kullanıcı sürüm çıkarmak istediğinde.
@@ -51,15 +51,16 @@
 - Yapılandırmayı `.env` ile yönet, `.env.example` tut.
 - **ÖNEMLİ:** `docs/` çalıştığı sunucuda servis edilmemeli: `.dockerignore`'a ekle, image'a, build çıktısına veya statik sunuma dahil etme. GitHub'da bulunması sorun değil. Denetimi `auditor` yapar.
 
-## Development Ortamı ve Ortak Servisler
+## Development Ortamı ve Veri Servisleri
 - Her projenin `development` ortamı ana repo klasöründe (`development` branch'i) sürekli ayakta durur: `.env.example`'daki varsayılan portlar ve `COMPOSE_PROJECT_NAME=<proje>-dev`. Her merge'den sonra güncellenir; yönetimi `/dev-env`. `main` için ortam tutulmaz.
-- **ÖNEMLİ:** Merge sonrası development'ta tek bir standart işlem çalışır (`~/.claude/scripts/deploy.sh apply`: ortam değişkeni eşitleme, yedek, build, migration, `up`, sağlık kontrolü). Merge'den önce aynısı worktree'de, güncel `<proje>_dev` kopyasıyla provadan geçer (`deploy.sh rehearse`); prova geçmeden merge yapılmaz. Hatalar merge öncesinde yakalanır ve aynı branch'te düzeltilir.
+- **ÖNEMLİ:** Merge sonrası development'ta tek bir standart işlem çalışır (`~/.claude/scripts/deploy.sh apply`: ortam değişkeni eşitleme, yedek, build, migration, `up`, sağlık kontrolü). Merge'den önce aynısı worktree'de, development verisinin güncel kopyasıyla provadan geçer (`deploy.sh rehearse`); prova geçmeden merge yapılmaz. Hatalar merge öncesinde yakalanır ve aynı branch'te düzeltilir.
 - Merge sonrası yine de hata olursa düzeltmeye çalışma, bildir; seçenekler `/merge` skill'indedir, geri yükleme yalnızca kullanıcı isterse.
 - Migration'lar: development'ta uygulanmış bir migration asla düzenlenmez, düzeltme yeni bir migration'la yapılır. Henüz merge edilmemiş branch'in kendi migration'ları düzenlenebilir. MySQL'de yarım kalmış bir migration için nasıl ilerleneceğini kullanıcıya sor.
-- PostgreSQL, MySQL ve Redis ortak stack'te çalışır (`~/.claude/infra/compose.yaml`, yönetimi `~/.claude/scripts/db.sh`). Projeler kendi veritabanı container'ını tanımlamaz, dış `shared` ağına katılır ve servislere adıyla bağlanır (`postgres`, `mysql`, `redis`). Farklı bir ana sürüm gerekiyorsa proje kendi container'ını kullanır.
-- Veritabanları: development için `<proje>_dev`, her worktree için `<proje>_<branch>` (`<proje>_dev`'in kopyası); Redis'te `<proje>:<branch>:` prefix'i. Bağlantı bilgilerini `db.sh` `.env`'e yazar (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DATABASE_URL`, `REDIS_URL`, `REDIS_PREFIX`); proje bunları okur.
-- Worktree veritabanları merge sonrası sormadan silinir; `<proje>_dev` asla otomatik silinmez veya sıfırlanmaz.
-- Proje ayarları (ortak servisler, migration, seed, test ve sağlık kontrolü komutları) projede commit edilen `.claude/devenv.conf` dosyasındadır; prova ve güncelleme aynı dosyayı okur.
+- Veri servisleri (PostgreSQL, MySQL, MariaDB, MongoDB, Redis vb.) projenin compose dosyasında tanımlanır. Development ve her worktree kendi container'larını ve volume'larını kullanır; portları yayınlanmaz. Bağlantı bilgileri resmi image değişkenleriyle (`POSTGRES_*`, `MYSQL_*`, `MARIADB_*`, `MONGO_INITDB_*`) `.env.example`'da durur.
+- Worktree'ler development verisinin kopyasıyla başlar (`~/.claude/scripts/db.sh copy-from-dev`); Redis gibi önbellekler ve kopyalanamayan motorlar boş başlar.
+- Her worktree kendi veri servislerini çalıştırdığı için bellek sınırlıdır (MySQL ~450 MB); yeni worktree açmadan önce kullanılabilir belleğe bak, yetersizse kullanıcıyı uyar.
+- Merge sonrası worktree'nin bütün compose volume'ları (veri dahil) sormadan silinir; development'ın volume'ları ve verisi asla otomatik silinmez veya sıfırlanmaz.
+- Proje ayarları (veri servisleri, migration, seed, test ve sağlık kontrolü komutları) projede commit edilen `.claude/devenv.conf` dosyasındadır; prova ve güncelleme aynı dosyayı okur.
 
 ## Ağ Erişimi
 - Uygulama ve arayüz servisleri yerel ağdan ve Tailscale'den erişilebilir olmalı:

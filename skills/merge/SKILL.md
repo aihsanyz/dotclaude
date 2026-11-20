@@ -14,11 +14,11 @@ Tüm git komutlarında `git -C <mutlak yol>` kullan; shell değişkeniyle yol ku
 
 ## 2. Entegrasyon provası (merge öncesi, worktree içinde)
 Merge sonrası development'ta çalışacak standart işlemin birebir aynısı worktree'de denenir; hataların merge'den önce yakalanması hedeflenir.
-- `~/.claude/scripts/deploy.sh rehearse <worktree yolu>`. Sırası: kontroller → ortam değişkeni eşitleme → worktree veritabanını yedekleyip güncel `<proje>_dev`'den yeniden kopyalama → build → migration → `up` → sağlık kontrolü → testler.
+- `~/.claude/scripts/deploy.sh rehearse <worktree yolu>`. Sırası: kontroller → ortam değişkeni eşitleme → worktree verisini yedekleyip development'ın güncel verisiyle değiştirme → build → migration → `up` → sağlık kontrolü → testler.
 - Script'in kontrolleri merge sonrası hataların bilinen sebeplerini yakalar: branch'in `origin/development`'ın gerisinde olması, commit edilmemiş değişiklik, development'ta zaten bulunan bir migration'ın değiştirilmesi, development `.env`'inde değeri olmayan yeni bir değişken.
 - **Başarısızsa merge yapma.** Hatayı (adım, son çıktı) bildir. Branch henüz merge edilmediği için düzeltme **aynı branch'te** yapılır; branch'in kendi migration'ları düzenlenebilir (development'ta hiç çalışmadılar). Düzeltip `/merge`'i tekrar çalıştır. Kendiliğinden düzeltmeye başlama; kullanıcıya bildir ve iste.
   - "Development .env needs values" hatası: eksik değişkenlerin değerini kullanıcıdan iste (`request_secret` ile, gizliyse) ve hem worktree'nin hem ana repo klasörünün `.env`'ine yaz; değeri çıktıya yazdırma.
-  - Prova öncesi worktree veritabanının yedeği `~/infra/shared/backups/<engine>/worktrees/` altındadır; karşılaştırma için kullanılabilir.
+  - Prova öncesi worktree verisinin yedeği `~/infra/backups/<proje>/<servis>/wt-<branch>.gz` dosyasındadır (`db.sh backups <worktree>`); karşılaştırma için kullanılabilir.
 
 ## 3. Auditor kapısı
 - `auditor` agent'ını worktree yolu ve `origin/development...HEAD` kapsamıyla çalıştır.
@@ -75,9 +75,9 @@ Geliştirmesi süren worktree'lere (PR'ı olmayan, açık olan veya merge'den so
 
 Her biri için:
 - **Docker** (worktree'de `compose.yaml` varsa):
-  - `docker compose down --rmi local`
-  - Her ortak servis için worktree veritabanını sormadan sil: `~/.claude/scripts/db.sh drop <engine> <proje> <branch>`. `<proje>_dev` asla silinmez; script de bunu reddeder.
-  - Worktree'nin compose projesine ait başka volume'lar varsa (`docker volume ls --filter label=com.docker.compose.project=<COMPOSE_PROJECT_NAME>`) listele ve silmeden önce sor.
+  - Worktree'nin `.env`'indeki `COMPOSE_PROJECT_NAME`'in development'ınkinden (`<proje>-dev`) farklı olduğunu doğrula; aynıysa dur ve sor.
+  - `docker compose down -v --rmi local`: worktree'nin container'ları, image'ları ve veri servisleri dahil bütün volume'ları sormadan silinir. Bunlar yalnızca o worktree'ye aittir. Development'ın volume'ları asla otomatik silinmez.
+  - Worktree yedeklerini sil: `~/.claude/scripts/db.sh forget <worktree yolu>`.
 - **Worktree:** `git -C <ana repo> worktree remove <worktree yolu>`. Commit edilmemiş değişiklik nedeniyle reddederse o worktree'yi atla ve sor; `--force` kullanma.
 - **Branch'ler:**
   - `git -C <ana repo> branch -D <branch>`
