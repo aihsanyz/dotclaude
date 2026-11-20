@@ -1,94 +1,96 @@
 ---
 name: initer
-description: Bulunulan klasörü bu çalışma düzenine göre kurar; klasör boşsa kullanıcının seçtiği stack'le yeni projeyi oluşturur, kod varsa mevcut projeyi düzenler. Git, private GitHub reposu, main/development branch'leri, stack ve komutları içeren proje CLAUDE.md'si, Docker ve .env uyumu ve development ortamını hazırlar. Yeni bir projeye başlanırken, bir projede ilk kez çalışılacağında, proje CLAUDE.md'sinde ## Komutlar bölümü yoksa veya kullanıcı /initer dediğinde kullan.
+description: Bulunulan klasörü bu çalışma düzeninin en küçük haline getirir; kod yazmaz, stack seçmez. Git, private GitHub reposu, main/development branch'leri, README.md, proje CLAUDE.md'si (boş ## Stack ve ## Komutlar), docs/reports/ ve en küçük Docker dosyalarını (compose.yaml, .dockerignore, .env.example, .gitignore) ekler. Yeni bir projeye başlanırken, bir projede ilk kez çalışılacağında, proje CLAUDE.md'sinde ## Komutlar bölümü yoksa veya kullanıcı /initer dediğinde kullan.
 ---
 
 # /initer
 
-Bulunulan klasörde bir kez çalışır; `/tasker`, `/push`, `/merge` ve `/release` bundan sonra kullanılır. Amaç: stack bilgisinin ve komutların bir kez çıkarılıp proje `CLAUDE.md`'sine yazılması, projenin global `CLAUDE.md` kurallarına uyması ve development ortamının ayakta olması.
+Bulunulan klasörde bir kez çalışır; `/tasker`, `/push`, `/merge` ve `/release` bundan sonra kullanılır. Amaç yalnızca klasörün iskeletini kurmaktır: **kod yazılmaz, stack seçilmez, bağımlılık kurulmaz, uygulama ayağa kaldırılmaz.** Projenin fikri, stack'i ve kodu sonraki işlerde şekillenir.
 
-Tüm git komutlarında `git -C <mutlak yol>` kullan. Bir adım başarısız olursa dur ve bildir.
+Mevcut dosyalara dokunma; yalnızca eksik olanları ekle. Tüm git komutlarında `git -C <mutlak yol>` kullan. Bir adım başarısız olursa dur ve bildir.
 
 ## 1. Klasörün durumunu belirle
-Klasör kullanıcının oturumu açtığı dizindir (`pwd`).
+Klasör kullanıcının oturumu açtığı dizindir (`pwd`); proje adı klasör adıdır.
 - `gh auth status` başarısızsa dur ve bildir.
-- Proje `CLAUDE.md`'sinde `## Komutlar` bölümü varsa init yapılmıştır:
-  - Development ortamı bu makinede kurulu değilse (ana klasörde `.env` yok veya container'lar çalışmıyor; ör. sunucu yenilendi, proje yeni clone edildi): ana klasörü `development`'a geçir ve `origin/development` ile eşitle, `.env` yoksa `.env.example`'dan oluştur (`COMPOSE_PROJECT_NAME=<proje>-dev`), sonra `~/.claude/scripts/deploy.sh apply <ana klasör> --bootstrap`. Veri boş başlar, seed çalışır.
-  - `CLAUDE.md`'deki stack ve komutları projeyle karşılaştır, farkları göster; yalnızca güncelleme gerekiyorsa D akışına geç.
-- Aksi halde duruma göre akış seç:
+- Proje `CLAUDE.md`'sinde `## Komutlar` bölümü varsa init yapılmıştır. Yalnızca bu makinede development ortamı eksikse tamamla (ör. proje yeni clone edildi): ana klasörü `development`'a geçir ve `origin/development` ile eşitle, `.env` yoksa `.env.example`'dan oluştur (`COMPOSE_PROJECT_NAME=<proje>-dev`); `compose.yaml`'da servis varsa `~/.claude/scripts/deploy.sh apply <ana klasör> --bootstrap`. Sonra bildir ve bitir.
+- Aksi halde:
 
 | Durum | Akış |
 |---|---|
-| Klasör boş (`ls -A` çıktısı yok) | **A. Yeni proje** |
-| Dosya var, `.git` yok | **B. Git'e alınmamış proje** |
-| Git var, `origin` yok | **C. Uzak reposu olmayan proje** |
-| Git ve `origin` var | **D. Mevcut proje** |
+| `.git` yok (klasör boş veya dolu) | **A. Git'e alınmamış klasör** |
+| Git var, `origin` yok | **B. Uzak reposu olmayan proje** |
+| Git ve `origin` var | **C. Mevcut proje** |
 
-## Ortak: GitHub reposu (A, B, C)
+## 2. İskelet dosyaları
+Yalnızca eksik olanları ekle; var olanı değiştirme. Var olan `CLAUDE.md`'de `## Stack` veya `## Komutlar` yoksa sadece eksik bölümü sona ekle. Var olan `.gitignore` ve `.dockerignore`'a yalnızca eksik satırları ekle.
+
+- `README.md`: `# <proje adı>` ve kullanıcı bir cümle verdiyse o cümle.
+- `CLAUDE.md`: aşağıdaki şablon.
+- `docs/reports/.gitkeep`
+- `compose.yaml`:
+  ```yaml
+  services: {}
+  ```
+- `.dockerignore`: `.git`, `.env`, `docs/`
+- `.gitignore`: `.env`
+- `.env.example`: `COMPOSE_PROJECT_NAME=<proje>-dev`
+
+`Dockerfile`, uygulama kodu, migration, test ve seed eklenmez; stack belirlendiğinde ilgili işte eklenir ve `## Stack` ile `## Komutlar` o işte doldurulur.
+
+## A. Git'e alınmamış klasör
+1. Klasör doluysa gizli bilgi kontrolü: `.env`, anahtar dosyaları ve benzerleri `.gitignore`'da mı bak; `git init -b main` sonrası `~/.claude/scripts/scan.sh fs` ile tara. Gizli bilgi bulunursa dur ve sor.
+2. `git init -b main`, iskelet dosyalarını ekle, ilk commit: `chore: initial project setup`.
+3. "GitHub reposu", ardından "Development ortamı".
+
+## B. Uzak reposu olmayan proje
+1. Varsayılan branch `main` değilse (ör. `master`) yeniden adlandırmak için sor.
+2. Çalışma alanı temiz değilse dur ve sor. İskelet dosyalarını ekle ve commit'le: `chore: add project skeleton`.
+3. "GitHub reposu", ardından "Development ortamı".
+
+## C. Mevcut proje
+1. `git fetch origin --prune`. `origin/main` yoksa dur ve sor. `origin/development` yoksa oluştur: `git push origin origin/main:refs/heads/development`.
+2. Ana klasörün çalışma alanı temiz değilse dur ve sor; temizse `git switch development` ve `origin/development` ile eşitle.
+3. Eksik iskelet dosyası varsa: `/tasker chore/project-setup` ile worktree aç (`## Komutlar` henüz olmadığından tasker'ın init ön koşulunu atla), eksikleri ekle, `chore: add project skeleton` ile commit'le, normal `/push` ve `/merge` akışı.
+4. "Development ortamı".
+
+## GitHub reposu (A, B)
 - **Görünürlük:** varsayılan **private**; kullanıcı açıkça public isterse public.
-- **Ad:** klasör adı; **sahip:** kullanıcının kişisel hesabı (`gh api user --jq .login`). Kullanıcı bir organizasyon belirttiyse o.
+- **Sahip:** kullanıcının kişisel hesabı (`gh api user --jq .login`); kullanıcı bir organizasyon belirttiyse o.
 - Aynı adda repo varsa (`gh repo view <sahip>/<ad>`) dur ve sor.
 - `gh repo create <sahip>/<ad> --private --source <klasör> --remote origin` (push etmeden), ardından `git -C <klasör> push -u origin main`.
-- `development`'ı oluştur: `git -C <klasör> push origin main:refs/heads/development`, `git fetch origin`, `git switch development`.
+- `development`: `git -C <klasör> push origin main:refs/heads/development`, `git fetch origin`, `git switch development`.
 
-## A. Yeni proje (boş klasör)
-1. **Sor** (tek soruda, `AskUserQuestion`): ne yapılacağı (bir cümle), dil ve framework, veri servisleri (PostgreSQL, MySQL, MongoDB, Redis vb. veya yok), varsa özel istekler. Bilinen bir tercih yoksa yaygın ve güncel bir seçenek öner.
-2. **Planı onaylat** (`send_to_user`): oluşturulacak dosyalar, framework ve bağımlılıklar (sürümleriyle), servisler, portlar, migration ve test aracı.
-3. **İskeleti oluştur**, global kurallara göre:
-   - Çalışan en küçük uygulama: `0.0.0.0`'da dinler, bir sağlık uç noktası vardır (`/health` veya framework'ün karşılığı).
-   - `Dockerfile`, `compose.yaml` (uygulama + veri servisleri; `healthcheck`, `restart: unless-stopped`, portlar `.env` değişkeniyle, iç servislerin portları yayınlanmaz, veri volume'da), `.dockerignore` (`docs/`, `.env`), `.gitignore` (`.env`), `.env.example` (bütün değişkenler varsayılanlarıyla).
-   - Migration aracı ve ilk migration (veritabanı varsa), test aracı ve bir duman testi, seed (gerekiyorsa).
-   - Proje `CLAUDE.md`'si (stack ve `## Komutlar` bölümüyle) ve kısa bir `README.md` (aşağıdaki şablon).
-   - Bağımlılıkları host'a değil, container içinde kur (ör. lock dosyasını `docker run --rm` ile üret).
-4. **Yerinde doğrula** (henüz git yok, düzeltmeler doğrudan yapılır): `.env.example`'dan `.env` oluştur, `COMPOSE_PROJECT_NAME=<ad>-dev`; `docker compose up -d --build --wait`, migration, seed ve testleri container içinde çalıştır, sağlık uç noktasını `curl` ile kontrol et. Geçene kadar düzelt. Bu ortam development ortamı olarak kalır.
-5. **Git:** `git init -b main`, ilk commit (`feat: initial project setup`), ardından "Ortak: GitHub reposu".
-6. **Standart işlem:** `~/.claude/scripts/deploy.sh apply <klasör>` (veri zaten var; migration ve sağlık kontrolü standart sırayla). `local.md`'deki adresleri bildir.
-
-## B. Git'e alınmamış proje
-1. Gizli bilgi kontrolü: commit'ten önce `.env`, anahtar dosyaları ve benzerleri için `.gitignore`'u kontrol et; `git init -b main` sonrası `~/.claude/scripts/scan.sh fs` ile tara. Gizli bilgi bulunursa dur ve kullanıcıya sor.
-2. Mevcut kodu **değiştirmeden** ilk commit: `chore: import existing code`.
-3. "Ortak: GitHub reposu", ardından **D**.
-
-## C. Uzak reposu olmayan proje
-1. Varsayılan branch `main` değilse (ör. `master`) yeniden adlandırmak için kullanıcıya sor.
-2. "Ortak: GitHub reposu" (`main` push'u ve `development`), ardından **D**.
-
-## D. Mevcut proje
-1. **Branch modeli:** `git fetch origin --prune`. `origin/main` yoksa (ör. `master` kullanılıyor) dur ve sor. `origin/development` yoksa `main`'den oluştur: `git push origin origin/main:refs/heads/development`. Ana klasör development ortamı olacak: çalışma alanı temiz değilse dur ve sor; temizse `git switch development`.
-2. **İncele:** dil, framework ve sürüm; servisler (uygulama, worker, veri servisleri ve motorları); migration, test ve seed komutları ve çalıştıkları servis; migration dizini; HTTP servislerinin portları ve sağlık yolu. Tahminleri "doğrulanmadı" diye işaretle.
-3. **Kurallarla karşılaştır** (global `CLAUDE.md`: Docker, Ağ Erişimi, Development Ortamı):
-   - `Dockerfile`, `compose.yaml`, `.dockerignore` (`docs/`, `.env`) var mı?
-   - Veri servisleri compose'ta mı, resmi image değişkenlerini kullanıyor mu, portları yayınlanmamış mı, veri volume'da mı?
-   - Uygulama `0.0.0.0`'da mı, portlar `.env` değişkeniyle mi, `healthcheck` ve `restart: unless-stopped` var mı?
-   - `.env.example` eksiksiz mi, `.env` `.gitignore`'da mı? Bind mount ve hot reload.
-4. **Planı onaylat** (`send_to_user`): proje `CLAUDE.md`'si (stack ve komutlar), dosya değişiklikleri ve dayandıkları kurallar, varsa yeni bağımlılıklar.
-5. **Uygula:** `/tasker chore/project-setup`. `## Komutlar` bölümü henüz olmadığından `tasker`'ın 5. adımındaki init ön koşulunu atla. Değişiklikleri Conventional Commits ile commit'le.
-6. **Merge:** normal `/merge` akışı. Prova temiz veritabanıyla çalıştığı için development ortamının henüz olmaması sorun değildir.
-7. **Development ortamını ilk kez kur** (`/merge`'ün 6. adımında `apply` yerine): ana klasörde `.env` yoksa `.env.example`'dan oluştur (`COMPOSE_PROJECT_NAME=<proje>-dev`), sonra `~/.claude/scripts/deploy.sh apply <ana klasör> --bootstrap`. `local.md`'deki adresleri bildir.
+## Development ortamı
+- Ana klasör `development` branch'inde olmalı.
+- `.env` yoksa `.env.example`'dan oluştur (`COMPOSE_PROJECT_NAME=<proje>-dev`).
+- `compose.yaml`'da servis yoksa container başlatılmaz; ilk servis eklendiğinde `/merge` ortamı ilk kez kurar. Servis varsa `~/.claude/scripts/deploy.sh apply <ana klasör> --bootstrap` ve `local.md`'deki adresleri bildir.
+- Kısa özet: repo adresi, branch'ler, eklenen dosyalar.
 
 ## Şablon: proje `CLAUDE.md`
-`## Komutlar` bölümünü `deploy.sh` okur; biçimi koru (`- anahtar: \`değer\``) ve yalnızca projede olan anahtarları yaz. Servisler ve portlar `compose.yaml`'dan çıkarılır; burada tekrar yazılmaz.
+`## Komutlar` bölümünü `deploy.sh` okur; biçimi koru (`- anahtar: \`değer\``) ve yalnızca projede olan anahtarları yaz. Init'te bölüm boş kalır; stack belirlendiğinde doldurulur. Servisler ve portlar `compose.yaml`'dan çıkarılır; burada tekrar yazılmaz.
 
 ```markdown
 # <Proje adı>
 
-<Projenin ne yaptığı, bir cümle.>
+<Projenin ne yaptığı, bir cümle; henüz yoksa boş bırak.>
 
 ## Stack
-- <dil / framework ve sürüm>
-- Servisler: <app: ..., worker: ..., db: postgres, cache: redis>
+- Henüz belirlenmedi.
 - Development ortamı: ana repo klasörü, `development` branch'i; her merge'den sonra `/merge` günceller. Yeni iş: `/tasker`.
 
 ## Komutlar
 <!-- deploy.sh bu bölümü okur. Biçim: "- anahtar: `değer`". Anahtarlar: service, migrate, test, seed, migrations -->
+
+## Notlar
+```
+
+Stack belirlendiğinde doldurulacak anahtarlar (örnek):
+```markdown
 - service: `app`
 - migrate: `php artisan migrate --force`
 - test: `php artisan test`
 - seed: `php artisan db:seed --force`
 - migrations: `database/migrations`
-
-## Notlar
-- <Projeye özel kurallar, bilinen tuzaklar.>
 ```
 
 - `service`: komutların çalıştığı compose servisi; yazılmazsa `build:` olan ilk servis.

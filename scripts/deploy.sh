@@ -140,8 +140,12 @@ name=$(compose_name "$dir"); dev_name=$(compose_name "$main_dir")
 dirty=$(git status --porcelain --untracked-files=normal | grep -vE '^.. (docs/reports/|\.env$)' || true)
 [[ -z $dirty ]] || fail checks "uncommitted changes; the deployed state must be committed"
 git fetch -q origin || fail checks "git fetch failed"
-app=${C[service]:-$(services | awk '$2 == "built" {print $1; exit}')}
-[[ -n $app ]] || fail checks "no service to run the commands in (set '- service:' in CLAUDE.md)"
+docker compose config -q >/dev/null 2>&1 || fail checks "docker compose config failed"
+svc_list=$(services)
+if [[ -n $svc_list ]]; then
+  app=${C[service]:-$(awk '$2 == "built" {print $1; exit}' <<<"$svc_list")}
+  [[ -n $app ]] || fail checks "no service to run the commands in (set '- service:' in CLAUDE.md)"
+fi
 
 if [[ $mode == rehearse ]]; then
   [[ $is_dev == 0 && -n $branch && $branch != main && $branch != development ]] || fail checks "rehearse runs in a feature worktree"
@@ -165,6 +169,21 @@ echo "STEP checks   ok"
 empty=$(env_keys sync "$dir/.env")
 [[ -z $empty ]] || fail env "new variables without a default in .env.example need values: $empty"
 echo "STEP env      ok"
+
+# Record what was rehearsed so the merge can check that nothing moved since.
+record_rehearsal() {
+  git -C "$main_dir" config "branch.$branch.rehearsedHead" "$(git rev-parse HEAD)"
+  git -C "$main_dir" config "branch.$branch.rehearsedBase" "$(git rev-parse origin/development)"
+  echo "rehearsed: head=$(git rev-parse --short HEAD) base=$(git rev-parse --short origin/development)"
+}
+
+# A skeleton project (initer) has no compose services yet: nothing to build or start.
+if [[ -z $svc_list ]]; then
+  echo "STEP build    skipped (no services in compose.yaml)"
+  [[ $mode == rehearse ]] && record_rehearsal
+  echo "RESULT: ok"
+  exit 0
+fi
 
 # ---- reset (rehearse only): fresh containers and volumes for this worktree only -------------
 [[ $mode == rehearse ]] && step reset docker compose down -v --remove-orphans
@@ -215,10 +234,7 @@ step health health
 # ---- test (rehearse only) -----------------------------------------------------------------
 if [[ $mode == rehearse ]]; then
   if [[ -n ${C[test]:-} ]]; then step test run_cmd "${C[test]}"; else echo "STEP test     skipped (no test command)"; fi
-  # Record what was rehearsed so the merge can check that nothing moved since.
-  git -C "$main_dir" config "branch.$branch.rehearsedHead" "$(git rev-parse HEAD)"
-  git -C "$main_dir" config "branch.$branch.rehearsedBase" "$(git rev-parse origin/development)"
-  echo "rehearsed: head=$(git rev-parse --short HEAD) base=$(git rev-parse --short origin/development)"
+  record_rehearsal
 fi
 
 echo "RESULT: ok"

@@ -30,8 +30,9 @@ Her biri için (`main`, `development`):
   - `--no-track` zorunlu: branch'in upstream'i `origin/development` olmamalı.
 - Git komutlarında yolları mutlak yaz ve shell değişkeni kullanma; guard hook değişkenli yolları doğrulayamaz.
 
-## 5. Docker ortamı (yalnızca `compose.yaml` varsa)
-- Proje `CLAUDE.md`'sinde `## Komutlar` bölümü yoksa dur: proje henüz hazırlanmamış, önce `/initer` çalıştırılmalı (bu skill `initer` içinden çağrıldıysa bu kontrolü ve development kopyalamasını atla).
+## 5. Docker ortamı (yalnızca `compose.yaml`'da servis varsa)
+- Proje `CLAUDE.md`'sinde `## Komutlar` bölümü yoksa dur: proje henüz hazırlanmamış, önce `/initer` çalıştırılmalı (bu skill `initer` içinden çağrıldıysa bu kontrolü atla).
+- `compose.yaml`'da servis yoksa (`initer` iskeleti, `services: {}`) yalnızca `.env`'i `.env.example`'dan oluştur ve `COMPOSE_PROJECT_NAME`'i aşağıdaki gibi yaz; kalan adımları atla.
 - `.env` yoksa `.env.example`'dan kopyala; `.env`'in `.gitignore`'da olduğunu doğrula.
 - `COMPOSE_PROJECT_NAME=<proje>-<branch adındaki / yerine ->` yaz; container ve volume'lar (veri servisleri dahil) development ortamından ayrı kalır.
 - `.env.example`'daki `*_PORT` değişkenleri için boş port seç (`ss -tlnp`, `docker ps --format '{{.Ports}}'`) ve `.env`'e yaz. `.env.example`'daki varsayılan portları kullanma, onlar development ortamına ayrılmıştır; çalışan diğer worktree'lerle de çakışmamalı.

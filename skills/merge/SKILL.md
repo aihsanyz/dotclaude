@@ -15,7 +15,6 @@ Tüm git komutlarında `git -C <mutlak yol>` kullan; shell değişkeniyle yol ku
 ## 2. Entegrasyon provası (merge öncesi, worktree içinde)
 Merge sonrası development'ta çalışacak standart işlemin birebir aynısı worktree'de denenir; hataların merge'den önce yakalanması hedeflenir.
 - `~/.claude/scripts/deploy.sh rehearse <worktree yolu>`. Sırası: kontroller → ortam değişkeni eşitleme → worktree'nin container ve volume'larını sıfırlama (temiz veritabanı) → build → migration → seed → `up` → sağlık kontrolü → testler.
-- `initer`'ın `chore/project-setup` branch'i için 6. adımda `apply` yerine `initer` skill'inin D akışındaki 7. adımını uygula (development ortamının ilk kurulumu).
 - Script'in kontrolleri merge sonrası hataların bilinen sebeplerini yakalar: branch'in `origin/development`'ın gerisinde olması, commit edilmemiş değişiklik, development'ta zaten bulunan bir migration'ın değiştirilmesi, development `.env`'inde değeri olmayan yeni bir değişken.
 - **Başarısızsa merge yapma.** Hatayı (adım, son çıktı) bildir. Branch henüz merge edilmediği için düzeltme **aynı branch'te** yapılır; branch'in kendi migration'ları düzenlenebilir (development'ta hiç çalışmadılar). Düzeltip `/merge`'i tekrar çalıştır. Kendiliğinden düzeltmeye başlama; kullanıcıya bildir ve iste.
   - "Development .env needs values" hatası: eksik değişkenlerin değerini kullanıcıdan iste (`request_secret` ile, gizliyse) ve hem worktree'nin hem ana repo klasörünün `.env`'ine yaz; değeri çıktıya yazdırma.
@@ -47,7 +46,8 @@ Merge sonrası development'ta çalışacak standart işlemin birebir aynısı wo
 ## 6. Merge sonrası: standart işlemin development'ta uygulanması
 - Merge'ün gerçekleştiğini doğrula: `gh pr view <PR> --json state` sonucu `MERGED` olmalı; ardından `git fetch origin --prune`.
 - Yerel `development`'ı eşitle (`tasker` skill'inin 3. adımındaki yöntem).
-- `~/.claude/scripts/deploy.sh apply <ana repo>`: provadaki adımların aynısı (veritabanı sıfırlanmaz, seed ve testler çalışmaz). `RESULT: ok` ise başarılıdır.
+- `~/.claude/scripts/deploy.sh apply <ana repo>`: provadaki adımların aynısı (veritabanı sıfırlanmaz, seed ve testler çalışmaz). `RESULT: ok` ise başarılıdır. `compose.yaml`'da servis yoksa script adımları atlar.
+- **İlk kurulum:** ana klasörde `.env` yoksa `.env.example`'dan oluştur (`COMPOSE_PROJECT_NAME=<proje>-dev`). `compose.yaml`'da servis var ama ana klasörde hiç container yoksa (`docker compose ps -a -q` boş; ör. ilk servisler bu işle eklendi) `apply` yerine `apply --bootstrap` çalıştır; seed de çalışır. `local.md`'deki adresleri bildir.
 - Prova geçtiyse burada hata beklenmez. Yine de başarısız olursa geri alma yapılmaz; 7. adımdan sonra doğrudan düzeltmeye geçilir (8. adım).
 
 ## 7. Temizlik (her durumda)
