@@ -18,8 +18,8 @@
 !scripts/*.sh
 
 !skills/
-!skills/start-task/
-!skills/start-task/SKILL.md
+!skills/tasker/
+!skills/tasker/SKILL.md
 !skills/push/
 !skills/push/SKILL.md
 !skills/merge/
@@ -28,6 +28,6 @@
 !skills/release/SKILL.md
 !skills/dev-env/
 !skills/dev-env/SKILL.md
-!skills/project-init/
-!skills/project-init/SKILL.md
+!skills/initer/
+!skills/initer/SKILL.md
 

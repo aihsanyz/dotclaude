@@ -11,10 +11,10 @@ Her projenin `development` ortamı ana repo klasöründe, `development` branch'i
 - **Proje adı:** Ana repo dizininin adı.
 - **Veri servisleri:** Veritabanı ve önbellek servisleri (PostgreSQL, MySQL, MariaDB, MongoDB, Redis vb.) projenin compose dosyasında tanımlıdır. Development ve her worktree kendi container'larını ve volume'larını kullanır; portları yayınlanmaz. Bağlantı bilgileri resmi image değişkenleriyle (`POSTGRES_*`, `MYSQL_*`, `MARIADB_*`, `MONGO_INITDB_*`) `.env.example`'da durur.
 - **Standart işlem:** `~/.claude/scripts/deploy.sh`. Merge sonrası güncelleme (`apply`) ile merge öncesi prova (`rehearse`) aynı adımları aynı sırayla çalıştırır; bu skill'de adımları elle tekrarlama.
-- **Proje ayarları:** Projede commit edilen `.claude/stack.toml` (`project-init` skill'i oluşturur; biçimi orada). Hem prova hem güncelleme bu dosyayı okur.
+- **Proje ayarları:** Projede commit edilen `.claude/stack.toml` (`initer` skill'i oluşturur; biçimi orada). Hem prova hem güncelleme bu dosyayı okur.
 
 ## kurulum (ortam yoksa)
-- İlk kurulum `project-init` skill'inin parçasıdır (7. adım). Projede `.claude/stack.toml` yoksa önce `/project-init` çalıştır.
+- İlk kurulum `initer` skill'inin parçasıdır (7. adım). Projede `.claude/stack.toml` yoksa önce `/initer` çalıştır.
 - `stack.toml` var ama ana repo klasöründe development ortamı yoksa (ör. sunucu yeni kuruldu): ana klasörü `development`'a geçir ve eşitle, `.env` yoksa `.env.example`'dan oluştur (`COMPOSE_PROJECT_NAME=<proje>-dev`), sonra `~/.claude/scripts/deploy.sh apply <ana repo> --bootstrap`.
 
 ## güncelle (her merge'den sonra)

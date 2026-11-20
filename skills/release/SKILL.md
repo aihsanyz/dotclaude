@@ -10,7 +10,7 @@ Sürüm yalnızca kullanıcı istediğinde çıkar. Kullanıcının releaser rap
 Tüm git komutlarında `git -C <mutlak yol>` kullan; shell değişkeniyle yol kurma.
 
 ## 1. Hazırlık
-- Ana repoda `git fetch origin --tags --prune`; yerel `main` ve `development`'ı eşitle (`start-task` skill'inin 3. adımındaki yöntem).
+- Ana repoda `git fetch origin --tags --prune`; yerel `main` ve `development`'ı eşitle (`tasker` skill'inin 3. adımındaki yöntem).
 - `~/.claude/scripts/release-info.sh` çıkış kodu 1 ise "Yayınlanacak değişiklik yok" de ve dur.
 - Release worktree'si aç: `git -C <ana repo> worktree add --detach <ana repo dizini>.worktrees/release-<YYYYMMDD> origin/development`.
 

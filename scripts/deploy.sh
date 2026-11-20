@@ -7,7 +7,7 @@
 #   deploy.sh rehearse <worktree>      [--bootstrap]  pre-merge rehearsal in a feature worktree
 #   deploy.sh apply    <dev checkout>  [--bootstrap]  post-merge update of the development environment
 #
-# --bootstrap is for the first merge of a project (project-init), before a development
+# --bootstrap is for the first merge of a project (initer), before a development
 # environment exists: data services start empty instead of being copied or backed up, and the
 # seed command runs after the migrations.
 #
@@ -24,7 +24,7 @@
 #   health   HTTP checks from HEALTH_CHECKS on localhost and the Tailscale IP
 #   test     rehearse only: TEST_CMD in APP_SERVICE
 #
-# Project settings come from .claude/stack.toml (see the project-init skill). Exit: 0 ok, 1 failed.
+# Project settings come from .claude/stack.toml (see the initer skill). Exit: 0 ok, 1 failed.
 set -uo pipefail
 source "$HOME/.claude/scripts/devenv-lib.sh"
 
@@ -99,7 +99,7 @@ EOF
 }
 
 # ---- checks -----------------------------------------------------------------------------
-[[ -f $stack_file ]] || fail checks "missing .claude/stack.toml (run the project-init skill)"
+[[ -f $stack_file ]] || fail checks "missing .claude/stack.toml (run the initer skill)"
 [[ -f $dir/compose.yaml || -f $dir/compose.yml || -f $dir/docker-compose.yml || -f $dir/docker-compose.yaml ]] || fail checks "no compose file"
 [[ -f $dir/.env ]] || fail checks "missing .env"
 dirty=$(git status --porcelain --untracked-files=normal | grep -vE '^.. (docs/reports/|\.env$)' || true)
@@ -114,7 +114,7 @@ if [[ $mode == rehearse ]]; then
     [[ -z $changed ]] || fail checks "migrations already in origin/development were changed (write a new migration instead): $changed"
   fi
   if [[ $bootstrap == 0 ]]; then
-    [[ -f $main_dir/.env && -f $main_dir/.claude/stack.toml ]] || fail checks "the development environment is not set up yet; the first merge of a project (project-init) uses --bootstrap"
+    [[ -f $main_dir/.env && -f $main_dir/.claude/stack.toml ]] || fail checks "the development environment is not set up yet; the first merge of a project (initer) uses --bootstrap"
     dev_missing=$(env_keys check "$main_dir/.env")
     [[ -z $dev_missing ]] || fail checks "development .env needs values before merge for: $dev_missing"
   fi

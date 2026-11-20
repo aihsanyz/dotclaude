@@ -1,9 +1,9 @@
 ---
-name: start-task
-description: Yeni bir iş başlatır; yerel main/development'ı eşitler, origin/development'tan worktree ve branch açar, boş port seçip Docker ortamını ayağa kaldırır ve erişim adreslerini doğrular. Kullanıcı yeni bir iş, özellik veya düzeltmeye başlamak istediğinde ya da /start-task <ad> yazdığında kullan.
+name: tasker
+description: Yeni bir iş başlatır; yerel main/development'ı eşitler, origin/development'tan worktree ve branch açar, boş port seçip Docker ortamını ayağa kaldırır ve erişim adreslerini doğrular. Kullanıcı yeni bir iş, özellik veya düzeltmeye başlamak istediğinde ya da /tasker <ad> yazdığında kullan.
 ---
 
-# /start-task <ad>
+# /tasker <ad>
 
 Git'li bir projede yeni işi `origin/development` tabanlı bir worktree branch'inde başlatır. Bir adım başarısız olursa dur ve kullanıcıya bildir.
 
@@ -32,7 +32,7 @@ Her biri için (`main`, `development`):
 - Git komutlarında yolları mutlak yaz ve shell değişkeni kullanma; guard hook değişkenli yolları doğrulayamaz.
 
 ## 5. Docker ortamı (yalnızca `compose.yaml` varsa)
-- Projede `.claude/stack.toml` yoksa dur: proje henüz hazırlanmamış, önce `/project-init` çalıştırılmalı (bu skill `project-init` içinden çağrıldıysa bu kontrolü ve development kopyalamasını atla).
+- Projede `.claude/stack.toml` yoksa dur: proje henüz hazırlanmamış, önce `/initer` çalıştırılmalı (bu skill `initer` içinden çağrıldıysa bu kontrolü ve development kopyalamasını atla).
 - Projenin development ortamı yoksa önce `dev-env` skill'inin kurulum adımlarını uygula; worktree verisi development'tan kopyalanır.
 - `.env` yoksa `.env.example`'dan kopyala; `.env`'in `.gitignore`'da olduğunu doğrula.
 - `COMPOSE_PROJECT_NAME=<proje>-<branch adındaki / yerine ->` yaz; container ve volume'lar (veri servisleri dahil) development ortamından ayrı kalır.

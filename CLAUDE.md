@@ -25,8 +25,8 @@
 - Git'li projelerde `main` ve `development` ile çalışılır; `development` yoksa `main`'den oluştur ve uzağa gönder.
 - Her iş `origin/development`'tan açılan bir worktree branch'inde yapılır (T3 Code'da da taban `origin/development`, `main` değil). Yerel `main` ve `development` uzaktakiyle her zaman fast-forward eşit tutulur.
 - Geliştirme ilerledikçe commit at. Akışları skill'lerle yürüt, adımları elle tekrarlama; kapılar atlanmaz:
-  - `/project-init`: projeyi bu düzene bir kez hazırlar (`stack.toml`, proje `CLAUDE.md`'si, Docker ve `.env` uyumu, development ortamı). Diğer skill'lerden önce çalışır.
-  - `/start-task`: yeni iş için worktree, branch, development verisinin kopyası ve Docker ortamı.
+  - `/initer`: projeyi bu düzene bir kez hazırlar (`stack.toml`, proje `CLAUDE.md`'si, Docker ve `.env` uyumu, development ortamı). Diğer skill'lerden önce çalışır.
+  - `/tasker`: yeni iş için worktree, branch, development verisinin kopyası ve Docker ortamı.
   - `/push`: reviewer kapısı, ardından push.
   - `/merge`: entegrasyon provası ve auditor kapısı, PR, `development`'a squash merge, development ortamının güncellenmesi ve temizlik.
   - `/release`: auditor + releaser, kullanıcı onayı, `main`'e merge commit, `vX.Y.Z` etiketi. Yalnızca kullanıcı sürüm çıkarmak istediğinde.
@@ -61,7 +61,7 @@
 - Worktree'ler development verisinin kopyasıyla başlar (`~/.claude/scripts/db.sh copy-from-dev`); Redis gibi önbellekler ve kopyalanamayan motorlar boş başlar.
 - Her worktree kendi veri servislerini çalıştırdığı için bellek sınırlıdır (MySQL ~450 MB); yeni worktree açmadan önce kullanılabilir belleğe bak, yetersizse kullanıcıyı uyar.
 - Merge sonrası worktree'nin bütün compose volume'ları (veri dahil) sormadan silinir; development'ın volume'ları ve verisi asla otomatik silinmez veya sıfırlanmaz.
-- Projenin stack bilgisi (servisler, veri motorları, migration, seed, test ve sağlık kontrolü komutları) projede commit edilen `.claude/stack.toml`'dadır; `/project-init` bir kez oluşturur, stack değişince aynı branch'te güncellenir. Prova ve güncelleme bu dosyayı okur; stack'i öğrenmek için kod tabanını yeniden tarama.
+- Projenin stack bilgisi (servisler, veri motorları, migration, seed, test ve sağlık kontrolü komutları) projede commit edilen `.claude/stack.toml`'dadır; `/initer` bir kez oluşturur, stack değişince aynı branch'te güncellenir. Prova ve güncelleme bu dosyayı okur; stack'i öğrenmek için kod tabanını yeniden tarama.
 
 ## Ağ Erişimi
 - Uygulama ve arayüz servisleri yerel ağdan ve Tailscale'den erişilebilir olmalı:

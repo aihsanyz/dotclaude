@@ -15,7 +15,7 @@ Tüm git komutlarında `git -C <mutlak yol>` kullan; shell değişkeniyle yol ku
 ## 2. Entegrasyon provası (merge öncesi, worktree içinde)
 Merge sonrası development'ta çalışacak standart işlemin birebir aynısı worktree'de denenir; hataların merge'den önce yakalanması hedeflenir.
 - `~/.claude/scripts/deploy.sh rehearse <worktree yolu>`. Sırası: kontroller → ortam değişkeni eşitleme → worktree verisini yedekleyip development'ın güncel verisiyle değiştirme → build → migration → `up` → sağlık kontrolü → testler.
-- `project-init` branch'i için (development ortamı henüz yok) `--bootstrap` ile çalıştır; 6. adımda da `project-init` skill'inin 7. adımını uygula.
+- `initer` branch'i için (development ortamı henüz yok) `--bootstrap` ile çalıştır; 6. adımda da `initer` skill'inin 7. adımını uygula.
 - Script'in kontrolleri merge sonrası hataların bilinen sebeplerini yakalar: branch'in `origin/development`'ın gerisinde olması, commit edilmemiş değişiklik, development'ta zaten bulunan bir migration'ın değiştirilmesi, development `.env`'inde değeri olmayan yeni bir değişken.
 - **Başarısızsa merge yapma.** Hatayı (adım, son çıktı) bildir. Branch henüz merge edilmediği için düzeltme **aynı branch'te** yapılır; branch'in kendi migration'ları düzenlenebilir (development'ta hiç çalışmadılar). Düzeltip `/merge`'i tekrar çalıştır. Kendiliğinden düzeltmeye başlama; kullanıcıya bildir ve iste.
   - "Development .env needs values" hatası: eksik değişkenlerin değerini kullanıcıdan iste (`request_secret` ile, gizliyse) ve hem worktree'nin hem ana repo klasörünün `.env`'ine yaz; değeri çıktıya yazdırma.
@@ -47,7 +47,7 @@ Merge sonrası development'ta çalışacak standart işlemin birebir aynısı wo
 
 ## 6. Merge sonrası: standart işlemin development'ta uygulanması
 - Merge'ün gerçekleştiğini doğrula: `gh pr view <PR> --json state` sonucu `MERGED` olmalı; ardından `git fetch origin --prune`.
-- Yerel `development`'ı eşitle (`start-task` skill'inin 3. adımındaki yöntem).
+- Yerel `development`'ı eşitle (`tasker` skill'inin 3. adımındaki yöntem).
 - `~/.claude/scripts/deploy.sh apply <ana repo>`: provadaki adımların aynısı (veri adımında yedek alınır, testler çalışmaz). `RESULT: ok` ise başarılıdır.
 - Prova geçtiyse burada hata beklenmez; aşağıdaki akış istisnalar (ortama özgü farklar, geçici hatalar) için yedek mekanizmadır.
 - **Başarısızsa temizlik yapma** (build, migration, `up` veya `curl`; hangisi olursa olsun): worktree'yi, container'larını, veritabanını ve branch'lerini olduğu gibi bırak; karşılaştırma ve teşhis için gerekir. Bu worktree artık **bekleyen** durumdadır.
@@ -56,8 +56,8 @@ Merge sonrası development'ta çalışacak standart işlemin birebir aynısı wo
     - Migration: uygulama yeniden başlatılmadı; alınan yedeğin yolunu ver.
     - `up` veya `curl`: development ortamı kapalı veya kullanılamıyor olabilir; bunu açıkça belirt ve hızlı çözüm olarak "Geri al"ı öne çıkar.
   - Kullanıcıya şu seçenekleri sun; hangisinin uygulanacağına kullanıcı karar verir, kendiliğinden düzeltmeye başlama:
-    1. **Düzelt:** `/start-task fix/...`; yeni branch bu worktree'yi çözüyor olarak işaretlenir (squash merge edilmiş branch'e devam edilmez). Ardından `/push` ve `/merge`.
-    2. **Geri al:** `/start-task revert/...`; aynı şekilde işaretlenir, branch'te `git revert <squash commit>`, ardından `/push` ve `/merge`.
+    1. **Düzelt:** `/tasker fix/...`; yeni branch bu worktree'yi çözüyor olarak işaretlenir (squash merge edilmiş branch'e devam edilmez). Ardından `/push` ve `/merge`.
+    2. **Geri al:** `/tasker revert/...`; aynı şekilde işaretlenir, branch'te `git revert <squash commit>`, ardından `/push` ve `/merge`.
     3. **Tekrar dene:** Geçici hatalar için (ağ, image indirme, dolu port) `/dev-env güncelle`.
     4. **Yine de temizle:** Kullanıcının seçtiği bekleyen worktree'ler için 7. adımın temizlik işlemlerini development ortamının durumuna bakmadan uygula.
   - 8. adıma geç.

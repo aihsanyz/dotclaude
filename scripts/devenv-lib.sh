@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Shared helpers for deploy.sh and db.sh (sourced, not executed).
 # devenv_load <checkout> sets: dir, main_dir, project, branch, is_dev, stack_file and the C
-# settings map derived from <checkout>/.claude/stack.toml (written by the project-init skill):
+# settings map derived from <checkout>/.claude/stack.toml (written by the initer skill):
 #   DATA_SERVICES  "svc:engine ..."    services with role = "data"
 #   HEALTH_CHECKS  "PORT_VAR:path ..." services with a health table
 #   APP_SERVICE, MIGRATE_CMD, TEST_CMD, SEED_CMD  from [commands]

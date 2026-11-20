@@ -10,7 +10,7 @@ Kullanıcının `/push` yazması veya push istemesi push onayıdır; ayrıca ona
 Tüm git komutlarında `git -C <worktree mutlak yolu>` kullan; shell değişkeniyle yol kurma.
 
 ## 1. Ön kontroller
-- Mevcut branch `main` veya `development` ise dur: iş bir worktree branch'inde olmalı (`/start-task`).
+- Mevcut branch `main` veya `development` ise dur: iş bir worktree branch'inde olmalı (`/tasker`).
 - Commit edilmemiş değişiklik varsa (`git status --short`, `docs/reports/` hariç) listele ve kullanıcıya sor: işin parçasıysa uygun Conventional Commits mesajıyla commit'le, değilse dur.
 - `git fetch origin`
 
