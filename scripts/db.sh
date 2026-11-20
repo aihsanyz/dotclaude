@@ -56,6 +56,9 @@ label() { [[ $is_dev == 1 ]] && echo "dev-$(date +%Y%m%d-%H%M%S)" || echo "wt-$(
 
 cmd_copy_from_dev() {
   [[ $is_dev == 0 ]] || die "copy-from-dev runs in a worktree, not in the development checkout"
+  local dev_name wt_name; dev_name=$(compose_name "$main_dir"); wt_name=$(compose_name "$dir")
+  [[ -n $dev_name ]] || die "the development environment is not set up (no COMPOSE_PROJECT_NAME in $main_dir/.env)"
+  [[ -n $wt_name && $wt_name != "$dev_name" ]] || die "the worktree needs its own COMPOSE_PROJECT_NAME in .env, different from development ($dev_name)"
   local wt=$dir svc engine
   for svc in $(selected "$@"); do
     engine=$(engine_of "$svc")

@@ -46,8 +46,17 @@ EOF
   )
 }
 
-# docker compose for a checkout; loads that checkout's compose file and .env.
-dc_in() { local d=$1; shift; docker compose --project-directory "$d" "$@"; }
+# COMPOSE_PROJECT_NAME of a checkout, from its .env (empty if missing).
+compose_name() { sed -n 's/^[[:space:]]*COMPOSE_PROJECT_NAME=//p' "$1/.env" 2>/dev/null | tail -1 | tr -d '"'"'"; }
+
+# docker compose for a checkout; loads that checkout's compose file and .env. Refuses to run
+# without an explicit COMPOSE_PROJECT_NAME, so compose never falls back to the directory name
+# and starts stray containers with empty volumes.
+dc_in() {
+  local d=$1; shift
+  [[ -n $(compose_name "$d") ]] || { echo "error: $d/.env has no COMPOSE_PROJECT_NAME; the environment is not set up" >&2; return 2; }
+  docker compose --project-directory "$d" "$@"
+}
 
 # "service engine" pairs from DATA_SERVICES="db:postgres cache:redis".
 data_services() {
