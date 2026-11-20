@@ -35,21 +35,29 @@ Tüm git komutlarında `git -C <mutlak yol>` kullan; shell değişkeniyle yol ku
 - Merge'ün gerçekleştiğini doğrula: `gh pr view <PR> --json state` sonucu `MERGED` olmalı; ardından `git fetch origin --prune`.
 - Yerel `development`'ı eşitle (`start-task` skill'inin 3. adımındaki yöntem).
 - **Development ortamını güncelle:** `dev-env` skill'inin güncelleme adımları. Build, migration, `up` ve `curl` doğrulamasının hepsi geçerse güncelleme başarılıdır.
-- **Başarısızsa temizlik yapma:** worktree'yi, container'larını, veritabanını ve branch'lerini olduğu gibi bırak; karşılaştırma ve teşhis için gerekir. Worktree kullanıcı onayı beklemez; development ortamının bir sonraki başarılı güncellemesini bekler ve o anda temizlenir (5. adım).
-  - Hatayı, worktree yolunu ve adresini bildir ve kullanıcıya şu seçenekleri sun; hangisinin uygulanacağına kullanıcı karar verir, kendiliğinden düzeltmeye başlama:
-    1. **Düzelt:** `/start-task fix/...` ile yeni branch (squash merge edilmiş branch'e devam edilmez), ardından `/push` ve `/merge`.
-    2. **Geri al:** `revert/...` branch'inde `git revert <squash commit>`, ardından `/push` ve `/merge`.
-    3. **Tekrar dene:** Hata geçiciyse (ağ, image indirme vb.) `/dev-env güncelle`.
-    4. **Yine de temizle:** Kullanıcı isterse 5. adımı development ortamının durumuna bakmadan uygula.
+- **Başarısızsa temizlik yapma** (build, migration, `up` veya `curl`; hangisi olursa olsun): worktree'yi, container'larını, veritabanını ve branch'lerini olduğu gibi bırak; karşılaştırma ve teşhis için gerekir. Bu worktree artık **bekleyen** durumdadır.
+  - Hatanın hangi adımda olduğunu, development ortamının o anki durumunu, worktree yolunu ve adresini bildir:
+    - Build: development eski haliyle çalışıyor.
+    - Migration: uygulama yeniden başlatılmadı; alınan yedeğin yolunu ver.
+    - `up` veya `curl`: development ortamı kapalı veya kullanılamıyor olabilir; bunu açıkça belirt ve hızlı çözüm olarak "Geri al"ı öne çıkar.
+  - Kullanıcıya şu seçenekleri sun; hangisinin uygulanacağına kullanıcı karar verir, kendiliğinden düzeltmeye başlama:
+    1. **Düzelt:** `/start-task fix/...`; yeni branch bu worktree'yi çözüyor olarak işaretlenir (squash merge edilmiş branch'e devam edilmez). Ardından `/push` ve `/merge`.
+    2. **Geri al:** `/start-task revert/...`; aynı şekilde işaretlenir, branch'te `git revert <squash commit>`, ardından `/push` ve `/merge`.
+    3. **Tekrar dene:** Geçici hatalar için (ağ, image indirme, dolu port) `/dev-env güncelle`.
+    4. **Yine de temizle:** Kullanıcının seçtiği bekleyen worktree'ler için 5. adımın temizlik işlemlerini development ortamının durumuna bakmadan uygula.
   - 6. adıma geç.
 
-## 5. Temizlik (development ortamı sağlıklıysa veya kullanıcı "yine de temizle" dediyse)
-Bu adım `dev-env` skill'indeki başarılı bir güncellemeden sonra da çalışır.
-Bu worktree'yi ve daha önce merge edilip temizlenmeyi bekleyen worktree'leri temizle. Geliştirmesi süren worktree'lere (PR'ı olmayan, açık olan veya merge'den sonra yeni commit almış) dokunma.
+## 5. Temizlik (yalnızca development güncellemesi başarılıysa)
+Geliştirmesi süren worktree'lere (PR'ı olmayan, açık olan veya merge'den sonra yeni commit almış) asla dokunma.
 
-Bir worktree yalnızca şu iki koşul birlikte sağlanırsa temizlenir:
+**Merge edilmiş sayılma koşulu** (bir worktree'nin temizlenebilmesi için ikisi birden):
 - `gh pr list --head <branch> --state merged --json number,headRefOid` merge edilmiş bir PR döndürüyor.
 - O PR'ın `headRefOid`'i branch'in şu anki commit'ine (`git rev-parse <branch>`) eşit. Eşit değilse branch merge'den sonra değişmiş veya aynı adla yeni bir iş açılmıştır; atla.
+
+**Hangi worktree'ler temizlenir:**
+1. Az önce merge edilen branch'in worktree'si: otomatik.
+2. Bu branch'in çözdüğü olarak işaretlenmiş bekleyen worktree'ler (`git -C <ana repo> config --get-all branch.<branch>.resolves`): koşulu sağlıyorlarsa otomatik.
+3. Merge edilmiş sayılan diğer bekleyen worktree'ler: **otomatik silme.** Development artık sağlıklı olduğu için kullanıcıya liste halinde sor (çoklu seçim; her biri için branch, merge edildiği PR ve neden beklediği). Yalnızca seçilenleri temizle, diğerleri beklemeye devam eder.
 
 Her biri için:
 - **Docker** (worktree'de `compose.yaml` varsa):

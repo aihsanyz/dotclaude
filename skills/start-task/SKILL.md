@@ -8,7 +8,7 @@ description: Yeni bir iş başlatır; yerel main/development'ı eşitler, origin
 Git'li bir projede yeni işi `origin/development` tabanlı bir worktree branch'inde başlatır. Bir adım başarısız olursa dur ve kullanıcıya bildir.
 
 ## 1. Branch adı
-- `<tür>/<ad>` biçiminde: tür işin niteliğine göre `feat`, `fix`, `chore`, `docs` veya `refactor` (belirsizse `feat`); ad kısa ve kebab-case (ör. `feat/user-login`).
+- `<tür>/<ad>` biçiminde: tür işin niteliğine göre `feat`, `fix`, `chore`, `docs`, `refactor` veya `revert` (belirsizse `feat`); ad kısa ve kebab-case (ör. `feat/user-login`).
 - Ad verilmediyse kullanıcının tarif ettiği işten türet ve belirt.
 
 ## 2. Repo hazırlığı
@@ -28,6 +28,7 @@ Her biri için (`main`, `development`):
 - Aksi halde konum: `<ana repo dizini>.worktrees/<branch adındaki / yerine ->` (ör. `~/projects/app.worktrees/feat-user-login`).
 - `git -C <ana repo> worktree add --no-track -b <branch> <konum> origin/development`
   - `--no-track` zorunlu: branch'in upstream'i `origin/development` olmamalı.
+- **Bekleyen bir worktree'yi çözmek için açılıyorsa** (`merge` skill'indeki başarısızlık seçeneklerinden "Düzelt" veya "Geri al"): çözdüğü branch'i kaydet: `git -C <ana repo> config --add branch.<yeni branch>.resolves <bekleyen branch>`. Birden fazla bekleyen worktree'yi çözüyorsa her biri için ayrı ekle. Kayıt yereldir, repoya girmez; branch silinince kendiliğinden kalkar.
 - Git komutlarında yolları mutlak yaz ve shell değişkeni kullanma; guard hook değişkenli yolları doğrulayamaz.
 
 ## 5. Docker ortamı (yalnızca `compose.yaml` varsa)
