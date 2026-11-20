@@ -25,7 +25,7 @@
 - Git'li projelerde `main` ve `development` ile çalışılır; `development` yoksa `main`'den oluştur ve uzağa gönder.
 - Her iş `origin/development`'tan açılan bir worktree branch'inde yapılır (T3 Code'da da taban `origin/development`, `main` değil). Yerel `main` ve `development` uzaktakiyle her zaman fast-forward eşit tutulur.
 - Geliştirme ilerledikçe commit at. Akışları skill'lerle yürüt, adımları elle tekrarlama; kapılar atlanmaz:
-  - `/initer`: projeyi bu düzene bir kez hazırlar (`stack.toml`, proje `CLAUDE.md`'si, Docker ve `.env` uyumu, development ortamı). Diğer skill'lerden önce çalışır.
+  - `/initer`: bulunulan klasörü bu düzene bir kez hazırlar; klasör boşsa seçilen stack'le yeni proje oluşturur, doluysa mevcut projeyi uyarlar (git, private GitHub reposu, `main`/`development`, `stack.toml`, proje `CLAUDE.md`'si, Docker ve `.env` uyumu, development ortamı). Diğer skill'lerden önce çalışır.
   - `/tasker`: yeni iş için worktree, branch, development verisinin kopyası ve Docker ortamı.
   - `/push`: reviewer kapısı, ardından push.
   - `/merge`: entegrasyon provası ve auditor kapısı, PR, `development`'a squash merge, development ortamının güncellenmesi ve temizlik.
