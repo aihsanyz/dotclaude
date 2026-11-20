@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 # Shared helpers for deploy.sh and db.sh (sourced, not executed).
-# devenv_load <checkout> sets: dir, main_dir, project, branch, is_dev and the C settings map
-# read from <checkout>/.claude/devenv.conf.
+# devenv_load <checkout> sets: dir, main_dir, project, branch, is_dev, stack_file and the C
+# settings map derived from <checkout>/.claude/stack.toml (written by the project-init skill):
+#   DATA_SERVICES  "svc:engine ..."    services with role = "data"
+#   HEALTH_CHECKS  "PORT_VAR:path ..." services with a health table
+#   APP_SERVICE, MIGRATE_CMD, TEST_CMD, SEED_CMD  from [commands]
+#   MIGRATIONS_DIR from [migrations].dir, HEALTH_TIMEOUT from [project].health_timeout
 
 devenv_load() {
   dir=$(cd "$1" && pwd) || return 1
@@ -13,19 +17,33 @@ devenv_load() {
   [[ $dir == "$main_dir" ]] && is_dev=1 || is_dev=0
 
   declare -gA C=([APP_SERVICE]=app [HEALTH_TIMEOUT]=90)
-  local conf="$dir/.claude/devenv.conf" line key val
-  [[ -f $conf ]] || return 0
-  while IFS= read -r line; do
-    [[ $line =~ ^[[:space:]]*([A-Z_]+)=(.*)$ ]] || continue
-    key=${BASH_REMATCH[1]} val=${BASH_REMATCH[2]}
-    # Quoted values may be followed by a comment; unquoted values end at " #".
-    if [[ $val =~ ^\"([^\"]*)\"[[:space:]]*(#.*)?$ ]] || [[ $val =~ ^\'([^\']*)\'[[:space:]]*(#.*)?$ ]]; then
-      val=${BASH_REMATCH[1]}
-    else
-      val=$(sed -E 's/[[:space:]]+#.*$//; s/[[:space:]]+$//' <<<"$val")
-    fi
+  stack_file="$dir/.claude/stack.toml"
+  [[ -f $stack_file ]] || return 0
+  local key val
+  # tomllib is in the Python standard library (3.11+); values come back NUL-separated.
+  while IFS= read -r -d '' key && IFS= read -r -d '' val; do
     C[$key]=$val
-  done < "$conf"
+  done < <(python3 - "$stack_file" <<'EOF'
+import sys, tomllib
+try:
+    s = tomllib.load(open(sys.argv[1], "rb"))
+except tomllib.TOMLDecodeError as e:
+    sys.exit(f"invalid {sys.argv[1]}: {e}")
+out = {}
+services = s.get("services", {})
+out["DATA_SERVICES"] = " ".join(f"{n}:{v['engine']}" for n, v in services.items()
+                                if v.get("role") == "data" and v.get("engine"))
+out["HEALTH_CHECKS"] = " ".join(f"{v['health']['port_var']}:{v['health'].get('path', '/')}"
+                                for v in services.values() if isinstance(v.get("health"), dict))
+cmd = s.get("commands", {})
+for key, name in (("APP_SERVICE", "service"), ("MIGRATE_CMD", "migrate"), ("TEST_CMD", "test"), ("SEED_CMD", "seed")):
+    if cmd.get(name): out[key] = cmd[name]
+if s.get("migrations", {}).get("dir"): out["MIGRATIONS_DIR"] = s["migrations"]["dir"]
+if s.get("project", {}).get("health_timeout"): out["HEALTH_TIMEOUT"] = str(s["project"]["health_timeout"])
+for k, v in out.items():
+    sys.stdout.write(f"{k}\0{v}\0")
+EOF
+  )
 }
 
 # docker compose for a checkout; loads that checkout's compose file and .env.

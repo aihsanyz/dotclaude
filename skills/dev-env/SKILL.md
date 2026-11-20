@@ -11,26 +11,11 @@ Her projenin `development` ortamı ana repo klasöründe, `development` branch'i
 - **Proje adı:** Ana repo dizininin adı.
 - **Veri servisleri:** Veritabanı ve önbellek servisleri (PostgreSQL, MySQL, MariaDB, MongoDB, Redis vb.) projenin compose dosyasında tanımlıdır. Development ve her worktree kendi container'larını ve volume'larını kullanır; portları yayınlanmaz. Bağlantı bilgileri resmi image değişkenleriyle (`POSTGRES_*`, `MYSQL_*`, `MARIADB_*`, `MONGO_INITDB_*`) `.env.example`'da durur.
 - **Standart işlem:** `~/.claude/scripts/deploy.sh`. Merge sonrası güncelleme (`apply`) ile merge öncesi prova (`rehearse`) aynı adımları aynı sırayla çalıştırır; bu skill'de adımları elle tekrarlama.
-- **Proje ayarları:** Projede commit edilen `.claude/devenv.conf`. Hem prova hem güncelleme bu dosyayı okur:
-
-```
-DATA_SERVICES="db:postgres cache:redis"  # compose servisi:motor; kopyalanabilen: postgres, mysql, mariadb, mongodb
-APP_SERVICE="app"                  # migration ve testlerin çalıştığı compose servisi
-MIGRATE_CMD="..."                  # container içinde migration komutu (yoksa boş)
-MIGRATIONS_DIR="migrations"        # migration dosyalarının dizini
-SEED_CMD="..."                     # yalnızca ilk kurulumda çalışır (yoksa boş)
-TEST_CMD="..."                     # provada çalışan testler
-HEALTH_CHECKS="APP_PORT:/ API_PORT:/health"  # PORT_DEĞİŞKENİ:yol listesi; HTTP sunmayan projede boş
-HEALTH_TIMEOUT=90                  # saniye
-```
+- **Proje ayarları:** Projede commit edilen `.claude/stack.toml` (`project-init` skill'i oluşturur; biçimi orada). Hem prova hem güncelleme bu dosyayı okur.
 
 ## kurulum (ortam yoksa)
-1. Ana repo klasörü `development`'ta olmalı. Değilse ve çalışma alanı temizse `git switch development`; temiz değilse dur ve sor.
-2. `development`'ı `origin/development` ile fast-forward eşitle.
-3. `.claude/devenv.conf` yoksa projeyi inceleyip değerleri bul, dosyayı oluştur ve kullanıcıya göster. Bu bir proje değişikliğidir: `/start-task chore/devenv-config` ile bir worktree'de commit edilir ve normal akışla (`/push`, `/merge`) development'a girer; kurulum o merge'den sonra devam eder.
-4. `.env` yoksa `.env.example`'dan oluştur; `COMPOSE_PROJECT_NAME=<proje>-dev` yaz. Portlar `.env.example`'daki varsayılanlar olarak kalır; bu portlar development ortamına ayrılmıştır.
-5. `~/.claude/scripts/deploy.sh apply <ana repo>` (veri servislerini de başlatır), ardından varsa `SEED_CMD` (container içinde).
-6. `local.md`'deki yerel ağ ve Tailscale adreslerini bildir.
+- İlk kurulum `project-init` skill'inin parçasıdır (7. adım). Projede `.claude/stack.toml` yoksa önce `/project-init` çalıştır.
+- `stack.toml` var ama ana repo klasöründe development ortamı yoksa (ör. sunucu yeni kuruldu): ana klasörü `development`'a geçir ve eşitle, `.env` yoksa `.env.example`'dan oluştur (`COMPOSE_PROJECT_NAME=<proje>-dev`), sonra `~/.claude/scripts/deploy.sh apply <ana repo> --bootstrap`.
 
 ## güncelle (her merge'den sonra)
 1. `development`'ı `origin/development` ile fast-forward eşitle.

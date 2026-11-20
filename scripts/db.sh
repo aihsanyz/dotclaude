@@ -9,7 +9,7 @@
 #   db.sh backups       <checkout>                    list backups of the checkout
 #   db.sh forget        <worktree>                    delete the worktree's backups
 #
-# Services and engines come from DATA_SERVICES in .claude/devenv.conf ("db:postgres cache:redis").
+# Services and engines come from the data services in .claude/stack.toml (role = "data", engine = ...).
 # Copyable engines: postgres, mysql, mariadb, mongodb. Others (redis, ...) start empty.
 # Credentials are read inside the container from the official image variables
 # (POSTGRES_*, MYSQL_*, MARIADB_*, MONGO_INITDB_*); they are never printed.
@@ -112,7 +112,7 @@ main() {
   [[ -n $cmd && -n $target ]] || { sed -n '2,16p' "$0"; exit 2; }
   shift 2
   devenv_load "$target" || die "cannot load $target"
-  [[ -n ${C[DATA_SERVICES]:-} ]] || die "no DATA_SERVICES in $dir/.claude/devenv.conf"
+  [[ -n ${C[DATA_SERVICES]:-} ]] || die "no data services in $dir/.claude/stack.toml"
   case $cmd in
     copy-from-dev) cmd_copy_from_dev "$@" ;;
     backup)        cmd_backup "$@" ;;

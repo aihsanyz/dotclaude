@@ -4,8 +4,12 @@
 # commands and a fresh copy of the development data, so the post-merge run only repeats
 # what has already passed.
 #
-#   deploy.sh rehearse <worktree>      pre-merge rehearsal in a feature worktree
-#   deploy.sh apply    <dev checkout>  post-merge update of the development environment
+#   deploy.sh rehearse <worktree>      [--bootstrap]  pre-merge rehearsal in a feature worktree
+#   deploy.sh apply    <dev checkout>  [--bootstrap]  post-merge update of the development environment
+#
+# --bootstrap is for the first merge of a project (project-init), before a development
+# environment exists: data services start empty instead of being copied or backed up, and the
+# seed command runs after the migrations.
 #
 # Steps (both modes, same order):
 #   checks   rehearse: branch contains origin/development, clean tree, migrations already in
@@ -20,13 +24,14 @@
 #   health   HTTP checks from HEALTH_CHECKS on localhost and the Tailscale IP
 #   test     rehearse only: TEST_CMD in APP_SERVICE
 #
-# Project settings come from .claude/devenv.conf (see the dev-env skill). Exit: 0 ok, 1 failed.
+# Project settings come from .claude/stack.toml (see the project-init skill). Exit: 0 ok, 1 failed.
 set -uo pipefail
 source "$HOME/.claude/scripts/devenv-lib.sh"
 
 DB="$HOME/.claude/scripts/db.sh"
-mode=${1:-}; target=${2:-}
-[[ $mode == rehearse || $mode == apply ]] && [[ -d $target ]] || { sed -n '2,24p' "$0" >&2; exit 2; }
+mode=${1:-}; target=${2:-}; bootstrap=0
+[[ ${3:-} == --bootstrap ]] && bootstrap=1
+[[ $mode == rehearse || $mode == apply ]] && [[ -d $target ]] || { sed -n '2,28p' "$0" >&2; exit 2; }
 devenv_load "$target" || exit 2
 cd "$dir" || exit 2
 
@@ -94,7 +99,7 @@ EOF
 }
 
 # ---- checks -----------------------------------------------------------------------------
-[[ -f $dir/.claude/devenv.conf ]] || fail checks "missing .claude/devenv.conf (create it with the dev-env skill)"
+[[ -f $stack_file ]] || fail checks "missing .claude/stack.toml (run the project-init skill)"
 [[ -f $dir/compose.yaml || -f $dir/compose.yml || -f $dir/docker-compose.yml || -f $dir/docker-compose.yaml ]] || fail checks "no compose file"
 [[ -f $dir/.env ]] || fail checks "missing .env"
 dirty=$(git status --porcelain --untracked-files=normal | grep -vE '^.. (docs/reports/|\.env$)' || true)
@@ -108,8 +113,11 @@ if [[ $mode == rehearse ]]; then
     changed=$(git diff --name-status origin/development...HEAD -- "${C[MIGRATIONS_DIR]}" | awk '$1 !~ /^A/ {print $NF}')
     [[ -z $changed ]] || fail checks "migrations already in origin/development were changed (write a new migration instead): $changed"
   fi
-  dev_missing=$(env_keys check "$main_dir/.env")
-  [[ -z $dev_missing ]] || fail checks "development .env needs values before merge for: $dev_missing"
+  if [[ $bootstrap == 0 ]]; then
+    [[ -f $main_dir/.env && -f $main_dir/.claude/stack.toml ]] || fail checks "the development environment is not set up yet; the first merge of a project (project-init) uses --bootstrap"
+    dev_missing=$(env_keys check "$main_dir/.env")
+    [[ -z $dev_missing ]] || fail checks "development .env needs values before merge for: $dev_missing"
+  fi
 else
   [[ $is_dev == 1 && $branch == development ]] || fail checks "apply runs in the development checkout on 'development'"
   [[ $(git rev-parse HEAD) == $(git rev-parse origin/development) ]] || fail checks "local development is not equal to origin/development"
@@ -127,7 +135,7 @@ data() {
   while read -r svc engine; do
     [[ -n $svc ]] || continue
     dc_in "$dir" up -d --wait "$svc" || return 1
-    copyable "$engine" || continue
+    [[ $bootstrap == 0 ]] && copyable "$engine" || continue
     if [[ $mode == rehearse ]]; then
       "$DB" backup "$dir" "$svc" && "$DB" copy-from-dev "$dir" "$svc" || return 1
     elif [[ -n ${C[MIGRATE_CMD]:-} ]]; then
@@ -135,7 +143,7 @@ data() {
     fi
   done < <(data_services)
 }
-if [[ -n ${C[DATA_SERVICES]:-} ]]; then step data data; else echo "STEP data     skipped (no DATA_SERVICES)"; fi
+if [[ -n ${C[DATA_SERVICES]:-} ]]; then step data data; else echo "STEP data     skipped (no data services)"; fi
 
 # ---- build, migrate, up -----------------------------------------------------------------
 step build docker compose build
@@ -143,6 +151,9 @@ if [[ -n ${C[MIGRATE_CMD]:-} ]]; then
   step migrate docker compose run --rm "${C[APP_SERVICE]}" sh -c "${C[MIGRATE_CMD]}"
 else
   echo "STEP migrate  skipped (no MIGRATE_CMD)"
+fi
+if [[ $bootstrap == 1 && -n ${C[SEED_CMD]:-} ]]; then
+  step seed docker compose run --rm "${C[APP_SERVICE]}" sh -c "${C[SEED_CMD]}"
 fi
 step up docker compose up -d --remove-orphans --wait --wait-timeout "${C[HEALTH_TIMEOUT]}"
 
@@ -164,7 +175,7 @@ health() {
     done
   done
 }
-if [[ -n ${C[HEALTH_CHECKS]:-} ]]; then step health health; else echo "STEP health   skipped (no HEALTH_CHECKS)"; fi
+if [[ -n ${C[HEALTH_CHECKS]:-} ]]; then step health health; else echo "STEP health   skipped (no health checks)"; fi
 
 # ---- test (rehearse only) ---------------------------------------------------------------
 if [[ $mode == rehearse ]]; then

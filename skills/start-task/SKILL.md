@@ -32,12 +32,13 @@ Her biri için (`main`, `development`):
 - Git komutlarında yolları mutlak yaz ve shell değişkeni kullanma; guard hook değişkenli yolları doğrulayamaz.
 
 ## 5. Docker ortamı (yalnızca `compose.yaml` varsa)
+- Projede `.claude/stack.toml` yoksa dur: proje henüz hazırlanmamış, önce `/project-init` çalıştırılmalı (bu skill `project-init` içinden çağrıldıysa bu kontrolü ve development kopyalamasını atla).
 - Projenin development ortamı yoksa önce `dev-env` skill'inin kurulum adımlarını uygula; worktree verisi development'tan kopyalanır.
 - `.env` yoksa `.env.example`'dan kopyala; `.env`'in `.gitignore`'da olduğunu doğrula.
 - `COMPOSE_PROJECT_NAME=<proje>-<branch adındaki / yerine ->` yaz; container ve volume'lar (veri servisleri dahil) development ortamından ayrı kalır.
 - `.env.example`'daki `*_PORT` değişkenleri için boş port seç (`ss -tlnp`, `docker ps --format '{{.Ports}}'`) ve `.env`'e yaz. `.env.example`'daki varsayılan portları kullanma, onlar development ortamına ayrılmıştır; çalışan diğer worktree'lerle de çakışmamalı.
 - **Bellek:** Her worktree kendi veri servislerini çalıştırır (MySQL ~450 MB, PostgreSQL ~60 MB). Açmadan önce `free -m` ile kullanılabilir belleğe bak; yetersizse kullanıcıyı uyar ve kullanılmayan bir worktree'nin durdurulmasını öner.
-- Veri servislerini başlat ve development verisini kopyala: `docker compose up -d --wait <DATA_SERVICES servisleri>`, ardından `~/.claude/scripts/db.sh copy-from-dev <worktree>`. Redis gibi önbellekler boş başlar.
+- Veri servislerini başlat ve development verisini kopyala: `docker compose up -d --wait <stack.toml'da role = "data" olan servisler>`, ardından `~/.claude/scripts/db.sh copy-from-dev <worktree>`. Redis gibi önbellekler boş başlar.
 - `docker compose up -d --build`, ardından servislerin ayağa kalktığını kontrol et (`docker compose ps`).
 - Erişimi `local.md`'deki yerel ağ ve Tailscale adresleriyle `curl` kullanarak doğrula.
 - Proje çalıştırılabilir bir uygulama ama Docker dosyaları yoksa: worktree'yi aç, ardından global kurallara göre Docker dosyalarını eklemek için plan sun.

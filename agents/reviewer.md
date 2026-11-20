@@ -37,7 +37,8 @@ Sen bir kod inceleyicisisin. Görevin, mevcut branch'teki değişiklikleri `orig
 - Branch `main` veya `development` değil; `origin/development`'tan açılmış ve güncel (`git merge-base --is-ancestor origin/development HEAD`).
 - Commit mesajları: Conventional Commits başlığı + 1-2 maddelik kısa açıklama; emoji ve AI imzası (`Co-Authored-By`, "Generated with") yok.
 - Kapsam dışı değişiklik veya istenmemiş refactor yok.
-- `origin/development`'ta zaten bulunan migration dosyaları değiştirilmemiş veya silinmemiş (dizin `.claude/devenv.conf`'taki `MIGRATIONS_DIR`): `git diff --name-status origin/development...HEAD -- <dizin>` yalnızca yeni (`A`) dosya göstermeli. Aksi halde Kritik; düzeltme yeni bir migration'la yapılır.
+- `origin/development`'ta zaten bulunan migration dosyaları değiştirilmemiş veya silinmemiş (dizin `.claude/stack.toml`'daki `[migrations].dir`): `git diff --name-status origin/development...HEAD -- <dizin>` yalnızca yeni (`A`) dosya göstermeli. Aksi halde Kritik; düzeltme yeni bir migration'la yapılır.
+- `compose.yaml` ile `.claude/stack.toml` uyumlu mu? Servis eklendi, silindi, adı ya da image'ı (veri motoru) değiştiyse veya migration/test komutu değiştiyse `stack.toml` da güncellenmiş olmalı; değilse Önemli. Veri servisinin image ana sürümü değiştiyse (ör. postgres 17 → 18) Kritik: mevcut volume'lar yeni sürümle açılmaz, yükseltme planı gerekir.
 - Yeni bir ortam değişkeni eklendiyse `.env.example`'da varsayılanı var mı? Yoksa (ör. gizli anahtar) raporda belirt: merge öncesi development `.env`'ine değerin girilmesi gerekir.
 
 **Docker ve ağ**
