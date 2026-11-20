@@ -45,7 +45,13 @@ Tüm git komutlarında `git -C <mutlak yol>` kullan; shell değişkeniyle yol ku
 
 ## 5. Temizlik (development ortamı sağlıklıysa veya kullanıcı "yine de temizle" dediyse)
 Bu adım `dev-env` skill'indeki başarılı bir güncellemeden sonra da çalışır.
-Bu worktree'yi ve daha önce merge edilip temizlenmeyi bekleyen worktree'leri temizle. Bekleyenleri bul: `git worktree list` içindeki her branch için `gh pr list --head <branch> --state merged --json number` sonuç döndürüyorsa merge edilmiştir. Her biri için:
+Bu worktree'yi ve daha önce merge edilip temizlenmeyi bekleyen worktree'leri temizle. Geliştirmesi süren worktree'lere (PR'ı olmayan, açık olan veya merge'den sonra yeni commit almış) dokunma.
+
+Bir worktree yalnızca şu iki koşul birlikte sağlanırsa temizlenir:
+- `gh pr list --head <branch> --state merged --json number,headRefOid` merge edilmiş bir PR döndürüyor.
+- O PR'ın `headRefOid`'i branch'in şu anki commit'ine (`git rev-parse <branch>`) eşit. Eşit değilse branch merge'den sonra değişmiş veya aynı adla yeni bir iş açılmıştır; atla.
+
+Her biri için:
 - **Docker** (worktree'de `compose.yaml` varsa):
   - `docker compose down --rmi local`
   - Her ortak servis için worktree veritabanını sormadan sil: `~/.claude/scripts/db.sh drop <engine> <proje> <branch>`. `<proje>_dev` asla silinmez; script de bunu reddeder.
