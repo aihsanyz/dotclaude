@@ -28,7 +28,6 @@ Her biri için (`main`, `development`):
 - Aksi halde konum: `<ana repo dizini>.worktrees/<branch adındaki / yerine ->` (ör. `~/projects/app.worktrees/feat-user-login`).
 - `git -C <ana repo> worktree add --no-track -b <branch> <konum> origin/development`
   - `--no-track` zorunlu: branch'in upstream'i `origin/development` olmamalı.
-- **Bekleyen bir worktree'yi çözmek için açılıyorsa** (`merge` skill'indeki başarısızlık seçeneklerinden "Düzelt" veya "Geri al"): çözdüğü branch'i kaydet: `git -C <ana repo> config --add branch.<yeni branch>.resolves <bekleyen branch>`. Birden fazla bekleyen worktree'yi çözüyorsa her biri için ayrı ekle. Kayıt yereldir, repoya girmez; branch silinince kendiliğinden kalkar.
 - Git komutlarında yolları mutlak yaz ve shell değişkeni kullanma; guard hook değişkenli yolları doğrulayamaz.
 
 ## 5. Docker ortamı (yalnızca `compose.yaml` varsa)

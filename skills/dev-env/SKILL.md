@@ -20,8 +20,7 @@ Her projenin `development` ortamı ana repo klasöründe, `development` branch'i
 ## güncelle (her merge'den sonra)
 1. `development`'ı `origin/development` ile fast-forward eşitle.
 2. `~/.claude/scripts/deploy.sh apply <ana repo>`. Adımlar: kontroller, ortam değişkeni eşitleme, yedek, build, migration, `up`, sağlık kontrolü. `RESULT: ok` başarıdır.
-3. Başarısız olursa script'in gösterdiği adımı ve son çıktıyı bildir; migration hatasında **düzeltmeye çalışma**, alınan yedeğin yolunu ver. Build hatasında eski container'lar çalışmaya devam eder. Seçenekler için `merge` skill'inin 6. adımına bak.
-4. Güncelleme `/merge` dışında çalıştırıldıysa (ör. "tekrar dene") ve başarılıysa: hangi sorunun çözüldüğü belli olmadığından bekleyen worktree'lerin hiçbirini otomatik silme. `merge` skill'inin 7. adımındaki koşulu sağlayanları kullanıcıya liste halinde sor ve yalnızca seçilenleri temizle. `/merge` içinden çağrıldıysa temizliği `merge` skill'i yapar.
+3. Başarısız olursa script'in gösterdiği adımı, son çıktıyı ve alınan yedeğin yolunu bildir. Geri alma yapılmaz; hemen `/tasker fix/...` ile düzeltmeye geç (`merge` skill'inin 8. adımı).
 
 ## durum / log / yeniden-başlat
 - Durum: `docker compose ps`, son commit (`git log -1 --oneline`), adreslerin `curl` sonucu.

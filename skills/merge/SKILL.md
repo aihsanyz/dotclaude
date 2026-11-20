@@ -49,41 +49,20 @@ Merge sonrası development'ta çalışacak standart işlemin birebir aynısı wo
 - Merge'ün gerçekleştiğini doğrula: `gh pr view <PR> --json state` sonucu `MERGED` olmalı; ardından `git fetch origin --prune`.
 - Yerel `development`'ı eşitle (`tasker` skill'inin 3. adımındaki yöntem).
 - `~/.claude/scripts/deploy.sh apply <ana repo>`: provadaki adımların aynısı (veri adımında yedek alınır, testler çalışmaz). `RESULT: ok` ise başarılıdır.
-- Prova geçtiyse burada hata beklenmez; aşağıdaki akış istisnalar (ortama özgü farklar, geçici hatalar) için yedek mekanizmadır.
-- **Başarısızsa temizlik yapma** (build, migration, `up` veya `curl`; hangisi olursa olsun): worktree'yi, container'larını, veritabanını ve branch'lerini olduğu gibi bırak; karşılaştırma ve teşhis için gerekir. Bu worktree artık **bekleyen** durumdadır.
-  - Hatanın hangi adımda olduğunu, development ortamının o anki durumunu, worktree yolunu ve adresini bildir:
-    - Build: development eski haliyle çalışıyor.
-    - Migration: uygulama yeniden başlatılmadı; alınan yedeğin yolunu ver.
-    - `up` veya `curl`: development ortamı kapalı veya kullanılamıyor olabilir; bunu açıkça belirt ve hızlı çözüm olarak "Geri al"ı öne çıkar.
-  - Kullanıcıya şu seçenekleri sun; hangisinin uygulanacağına kullanıcı karar verir, kendiliğinden düzeltmeye başlama:
-    1. **Düzelt:** `/tasker fix/...`; yeni branch bu worktree'yi çözüyor olarak işaretlenir (squash merge edilmiş branch'e devam edilmez). Ardından `/push` ve `/merge`.
-    2. **Geri al:** `/tasker revert/...`; aynı şekilde işaretlenir, branch'te `git revert <squash commit>`, ardından `/push` ve `/merge`.
-    3. **Tekrar dene:** Geçici hatalar için (ağ, image indirme, dolu port) `/dev-env güncelle`.
-    4. **Yine de temizle:** Kullanıcının seçtiği bekleyen worktree'ler için 7. adımın temizlik işlemlerini development ortamının durumuna bakmadan uygula.
-  - 8. adıma geç.
+- Prova geçtiyse burada hata beklenmez. Yine de başarısız olursa geri alma yapılmaz; 7. adımdan sonra doğrudan düzeltmeye geçilir (8. adım).
 
-## 7. Temizlik (yalnızca development güncellemesi başarılıysa)
-Geliştirmesi süren worktree'lere (PR'ı olmayan, açık olan veya merge'den sonra yeni commit almış) asla dokunma.
-
-**Merge edilmiş sayılma koşulu** (bir worktree'nin temizlenebilmesi için ikisi birden):
-- `gh pr list --head <branch> --state merged --json number,headRefOid` merge edilmiş bir PR döndürüyor.
-- O PR'ın `headRefOid`'i branch'in şu anki commit'ine (`git rev-parse <branch>`) eşit. Eşit değilse branch merge'den sonra değişmiş veya aynı adla yeni bir iş açılmıştır; atla.
-
-**Hangi worktree'ler temizlenir:**
-1. Az önce merge edilen branch'in worktree'si: otomatik.
-2. Bu branch'in çözdüğü olarak işaretlenmiş bekleyen worktree'ler (`git -C <ana repo> config --get-all branch.<branch>.resolves`): koşulu sağlıyorlarsa otomatik.
-3. Merge edilmiş sayılan diğer bekleyen worktree'ler: **otomatik silme.** Development artık sağlıklı olduğu için kullanıcıya liste halinde sor (çoklu seçim; her biri için branch, merge edildiği PR ve neden beklediği). Yalnızca seçilenleri temizle, diğerleri beklemeye devam eder.
-
-Her biri için:
+## 7. Temizlik (her durumda)
+Merge edilen branch'in işi bitmiştir; development güncellemesi başarısız olsa bile temizlenir, düzeltme yeni bir branch'te yapılır.
 - **Docker** (worktree'de `compose.yaml` varsa):
   - Worktree'nin `.env`'indeki `COMPOSE_PROJECT_NAME`'in development'ınkinden (`<proje>-dev`) farklı olduğunu doğrula; aynıysa dur ve sor.
   - `docker compose down -v --rmi local`: worktree'nin container'ları, image'ları ve veri servisleri dahil bütün volume'ları sormadan silinir. Bunlar yalnızca o worktree'ye aittir. Development'ın volume'ları asla otomatik silinmez.
   - Worktree yedeklerini sil: `~/.claude/scripts/db.sh forget <worktree yolu>`.
-- **Worktree:** `git -C <ana repo> worktree remove <worktree yolu>`. Commit edilmemiş değişiklik nedeniyle reddederse o worktree'yi atla ve sor; `--force` kullanma.
+- **Worktree:** `git -C <ana repo> worktree remove <worktree yolu>`. Commit edilmemiş değişiklik nedeniyle reddederse dur ve sor; `--force` kullanma.
 - **Branch'ler:**
   - `git -C <ana repo> branch -D <branch>`
   - `git -C <ana repo> push origin --delete <branch>`. GitHub branch'i zaten sildiyse çıkan hatayı yok say.
 - **T3 Code:** Worktree T3 Code'un açtığı bir worktree'yse ve bir oturum hâlâ o dizindeyse, silmeden önce kullanıcıya bildir.
 
-## 8. Bildir
-Kısa özet: prova sonucu, auditor sonucu ve rapor yolu, PR başlığı, merge durumu, development ortamının durumu ve adresi, yapılan veya bekletilen temizlik.
+## 8. Bildir; development güncellemesi başarısızsa düzeltmeye geç
+- Kısa özet: prova ve auditor sonucu, rapor yolu, PR başlığı, merge durumu, development ortamının durumu ve adresi, yapılan temizlik.
+- `apply` başarısızsa: hatanın adımını ve son çıktısını bildir, ardından **hemen** `/tasker fix/<merge edilen branch'in adı>` ile düzeltme işini aç. Worktree development'ın güncel kodu ve verisiyle açıldığı için hata orada tekrarlanır; sebebi bul, düzelt ve değişikliği kullanıcıya göster. Push ve merge yine kullanıcının isteğiyle yapılır. Düzeltme merge edilene kadar diğer işlerin provaları da aynı hatayla durabilir; düzeltme önceliklidir.
