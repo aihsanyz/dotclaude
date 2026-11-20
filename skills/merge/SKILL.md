@@ -46,13 +46,13 @@ Merge sonrası development'ta çalışacak standart işlemin birebir aynısı wo
 ## 6. Merge sonrası: standart işlemin development'ta uygulanması
 - Merge'ün gerçekleştiğini doğrula: `gh pr view <PR> --json state` sonucu `MERGED` olmalı; ardından `git fetch origin --prune`.
 - Yerel `development`'ı eşitle (`tasker` skill'inin 3. adımındaki yöntem).
-- `~/.claude/scripts/deploy.sh apply <ana repo>`: provadaki adımların aynısı (veritabanı sıfırlanmaz, seed ve testler çalışmaz). `RESULT: ok` ise başarılıdır. `compose.yaml`'da servis yoksa script adımları atlar.
-- **İlk kurulum:** ana klasörde `.env` yoksa `.env.example`'dan oluştur (`COMPOSE_PROJECT_NAME=<proje>-dev`). `compose.yaml`'da servis var ama ana klasörde hiç container yoksa (`docker compose ps -a -q` boş; ör. ilk servisler bu işle eklendi) `apply` yerine `apply --bootstrap` çalıştır; seed de çalışır. `local.md`'deki adresleri bildir.
+- `~/.claude/scripts/deploy.sh apply <ana repo>`: provadaki adımların aynısı (veritabanı sıfırlanmaz, seed ve testler çalışmaz). `RESULT: ok` ise başarılıdır. Compose dosyasında servis yoksa script adımları atlar.
+- **İlk kurulum:** ana klasörde `.env` yoksa `.env.example`'dan oluştur (`COMPOSE_PROJECT_NAME=<proje>-dev`). Compose dosyasında servis var (`docker compose config --services` boş değil) ama ana klasörde hiç container yoksa (`docker compose ps -a -q` boş; ör. ilk servisler bu işle eklendi) `apply` yerine `apply --bootstrap` çalıştır; seed de çalışır. `local.md`'deki adresleri bildir.
 - Prova geçtiyse burada hata beklenmez. Yine de başarısız olursa geri alma yapılmaz; 7. adımdan sonra doğrudan düzeltmeye geçilir (8. adım).
 
 ## 7. Temizlik (her durumda)
 Merge edilen branch'in işi bitmiştir; development güncellemesi başarısız olsa bile temizlenir, düzeltme yeni bir branch'te yapılır.
-- **Docker** (worktree'de `compose.yaml` varsa):
+- **Docker** (worktree'de compose dosyası varsa):
   - Worktree'nin `.env`'indeki `COMPOSE_PROJECT_NAME`'in development'ınkinden (`<proje>-dev`) farklı olduğunu doğrula; aynıysa dur ve sor.
   - `docker compose down -v --rmi local`: worktree'nin container'ları, image'ları ve veri servisleri dahil bütün volume'ları sormadan silinir. Bunlar yalnızca o worktree'ye aittir. Development'ın volume'ları asla otomatik silinmez.
 - **Worktree:** `git -C <ana repo> worktree remove <worktree yolu>`. Commit edilmemiş değişiklik nedeniyle reddederse dur ve sor; `--force` kullanma.

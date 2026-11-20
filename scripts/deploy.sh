@@ -25,12 +25,13 @@
 #
 # Commands come from the "## Komutlar" section of the project's CLAUDE.md:
 #   - service: `app`   - migrate: `...`   - test: `...`   - seed: `...`   - migrations: `dir`
-# Services and ports come from compose.yaml. Exit: 0 ok, 1 failed, 2 usage.
+# Services and ports come from the compose file that COMPOSE_FILE in .env selects (compose.dev.yaml).
+# Exit: 0 ok, 1 failed, 2 usage.
 set -uo pipefail
 
 mode=${1:-}; target=${2:-}; bootstrap=0
 [[ ${3:-} == --bootstrap ]] && bootstrap=1
-[[ $mode == rehearse || $mode == apply ]] && [[ -d $target ]] || { sed -n '2,27p' "$0" >&2; exit 2; }
+[[ $mode == rehearse || $mode == apply ]] && [[ -d $target ]] || { sed -n '2,29p' "$0" >&2; exit 2; }
 dir=$(cd "$target" && pwd) || exit 2
 cd "$dir" || exit 2
 
@@ -133,7 +134,6 @@ EOF
 
 # ---- checks -------------------------------------------------------------------------------
 [[ ${C[section]:-} == yes ]] || fail checks "no '## Komutlar' section in CLAUDE.md (run the initer skill)"
-[[ -f compose.yaml || -f compose.yml || -f docker-compose.yml || -f docker-compose.yaml ]] || fail checks "no compose file"
 [[ -f .env ]] || fail checks "missing .env"
 name=$(compose_name "$dir"); dev_name=$(compose_name "$main_dir")
 [[ -n $name ]] || fail checks "no COMPOSE_PROJECT_NAME in .env"
@@ -179,7 +179,7 @@ record_rehearsal() {
 
 # A skeleton project (initer) has no compose services yet: nothing to build or start.
 if [[ -z $svc_list ]]; then
-  echo "STEP build    skipped (no services in compose.yaml)"
+  echo "STEP build    skipped (no services in the compose file)"
   [[ $mode == rehearse ]] && record_rehearsal
   echo "RESULT: ok"
   exit 0

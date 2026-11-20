@@ -30,9 +30,9 @@ Her biri için (`main`, `development`):
   - `--no-track` zorunlu: branch'in upstream'i `origin/development` olmamalı.
 - Git komutlarında yolları mutlak yaz ve shell değişkeni kullanma; guard hook değişkenli yolları doğrulayamaz.
 
-## 5. Docker ortamı (yalnızca `compose.yaml`'da servis varsa)
+## 5. Docker ortamı (yalnızca compose dosyası varsa)
 - Proje `CLAUDE.md`'sinde `## Komutlar` bölümü yoksa dur: proje henüz hazırlanmamış, önce `/initer` çalıştırılmalı (bu skill `initer` içinden çağrıldıysa bu kontrolü atla).
-- `compose.yaml`'da servis yoksa (`initer` iskeleti, `services: {}`) yalnızca `.env`'i `.env.example`'dan oluştur ve `COMPOSE_PROJECT_NAME`'i aşağıdaki gibi yaz; kalan adımları atla.
+- Compose dosyasında servis yoksa (`docker compose config --services` boş; `initer` iskeleti) yalnızca `.env`'i `.env.example`'dan oluştur ve `COMPOSE_PROJECT_NAME`'i aşağıdaki gibi yaz; kalan adımları atla.
 - `.env` yoksa `.env.example`'dan kopyala; `.env`'in `.gitignore`'da olduğunu doğrula.
 - `COMPOSE_PROJECT_NAME=<proje>-<branch adındaki / yerine ->` yaz; container ve volume'lar (veri servisleri dahil) development ortamından ayrı kalır.
 - `.env.example`'daki `*_PORT` değişkenleri için boş port seç (`ss -tlnp`, `docker ps --format '{{.Ports}}'`) ve `.env`'e yaz. `.env.example`'daki varsayılan portları kullanma, onlar development ortamına ayrılmıştır; çalışan diğer worktree'lerle de çakışmamalı.
@@ -47,8 +47,8 @@ Kısa özet: branch, worktree yolu, taban commit'i, varsa erişim adresleri ve d
 
 ## 7. Geliştirme sırasında: proje `CLAUDE.md`'sini güncel tut
 Bu işte aşağıdakilerden biri değişirse proje `CLAUDE.md`'sinin `## Stack` ve `## Komutlar` bölümlerini **aynı commit'te** güncelle:
-- `compose.yaml`'da servis eklendi, silindi veya yeniden adlandırıldı; komutların çalıştığı servis değişti.
+- Compose dosyalarında servis eklendi, silindi veya yeniden adlandırıldı; komutların çalıştığı servis değişti.
 - Bir veri servisinin image'ı veya motoru değişti. **Ana sürüm yükseltmesi** (ör. postgres 17 → 18) development'ın mevcut volume'larıyla açılmaz: değişiklikten önce kullanıcıya bildir ve yükseltme planı sun.
 - Migration, test veya seed komutu ya da migration dizini değişti; yeni tablolar için seed'e örnek satır eklenmeli.
 
-Güncellemenin doğruluğu `/merge`'deki provada test edilir: `## Komutlar`'daki bir komut yanlışsa prova başarısız olur. Reviewer da `compose.yaml` ile proje `CLAUDE.md`'sinin uyumunu `/push`'ta denetler.
+Güncellemenin doğruluğu `/merge`'deki provada test edilir: `## Komutlar`'daki bir komut yanlışsa prova başarısız olur. Reviewer da compose dosyaları ile proje `CLAUDE.md`'sinin uyumunu `/push`'ta denetler.

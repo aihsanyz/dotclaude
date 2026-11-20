@@ -25,7 +25,7 @@
 - Git'li projelerde `main` ve `development` ile çalışılır; `development` yoksa `main`'den oluştur ve uzağa gönder.
 - Her iş `origin/development`'tan açılan bir worktree branch'inde yapılır (T3 Code'da da taban `origin/development`, `main` değil). Yerel `main` ve `development` uzaktakiyle her zaman fast-forward eşit tutulur.
 - Geliştirme ilerledikçe commit at. Akışları skill'lerle yürüt, adımları elle tekrarlama; kapılar atlanmaz:
-  - `/initer`: bulunulan klasörü bu düzenin en küçük haline bir kez getirir; kod yazmaz, stack seçmez (git, private GitHub reposu, `main`/`development`, `README.md`, boş `## Stack`/`## Komutlar`'lı proje `CLAUDE.md`'si, `docs/reports/`, servissiz `compose.yaml`, `.dockerignore`, `.env.example`, `.gitignore`). Diğer skill'lerden önce çalışır.
+  - `/initer`: bulunulan klasörü bu düzenin en küçük haline bir kez getirir; kod yazmaz, stack seçmez (git, private GitHub reposu, `main`/`development`, `README.md`, boş `## Stack`/`## Komutlar`'lı proje `CLAUDE.md`'si, `docs/reports/`, servissiz `compose.dev.yaml`/`compose.prod.yaml`, `.env.example`/`.env.production.example`, `.dockerignore`, `.gitignore`). Diğer skill'lerden önce çalışır.
   - `/tasker`: yeni iş için worktree, branch, temiz veritabanı (migration + seed) ve Docker ortamı.
   - `/push`: reviewer kapısı, ardından push.
   - `/merge`: entegrasyon provası ve auditor kapısı, PR, `development`'a squash merge, development ortamının güncellenmesi ve temizlik.
@@ -46,7 +46,8 @@
 
 ## Docker ile Geliştirme
 - Host'a hiçbir şey kurma: proje bağımlılıkları, runtime'lar, araçlar ve sistem paketleri dahil. Host'ta kesinlikle gerekiyorsa önce sor.
-- Çalıştırılabilir uygulama projelerinde `Dockerfile`, `compose.yaml` ve `.dockerignore` bulunmalı. Yoksa plan sunarak ekle, varsa ona göre güncelle. Doküman, dotfiles, config gibi repolarda gerekmez.
+- Çalıştırılabilir uygulama projelerinde `Dockerfile`, compose dosyaları ve `.dockerignore` bulunmalı. Yoksa plan sunarak ekle, varsa ona göre güncelle. Doküman, dotfiles, config gibi repolarda gerekmez.
+- Development ve production ayrı compose dosyalarındadır: `compose.dev.yaml` (development ortamı ve worktree'ler: bind mount, hot reload, Dockerfile'ın `dev` target'ı) ve `compose.prod.yaml` (kod image içinde, bind mount yok, Dockerfile'ın `prod` target'ı, `restart: unless-stopped`). Hangisinin kullanılacağını `.env`'deki `COMPOSE_FILE` seçer: `.env.example` → `compose.dev.yaml`, `.env.production.example` → `compose.prod.yaml`. Düz `docker compose` komutları bu sayede doğru dosyayı kullanır; `-f` verme. Servis, veri servisi veya değişken eklerken iki dosyayı ve iki örnek `.env`'i birlikte güncelle.
 - Bağımlılık kurma, test, lint, build, migration dahil tüm proje komutlarını container içinde çalıştır (`docker compose run --rm` / `docker compose exec`).
 - Geliştirmede kaynak kodu bind mount ile bağla, hot reload kullan; `node_modules`, `.venv` gibi dizinler container içinde veya named volume'da kalsın.
 - Yapılandırmayı `.env` ile yönet, `.env.example` tut.
@@ -62,7 +63,7 @@
 - Worktree'ler temiz bir veritabanıyla başlar: migration ve seed. Prova da her seferinde worktree'nin veritabanını sıfırlayıp baştan kurar; seed verisi gerçekçi olmalı (her tabloda örnek satırlar), çünkü veriye bağlı migration hatalarını provada ancak o yakalar.
 - Her worktree kendi veri servislerini çalıştırdığı için bellek sınırlıdır (MySQL ~450 MB); yeni worktree açmadan önce kullanılabilir belleğe bak, yetersizse kullanıcıyı uyar.
 - Prova sırasında ve merge sonrası worktree'nin bütün compose volume'ları (veri dahil) sormadan silinir; development'ın volume'ları ve verisi asla otomatik silinmez veya sıfırlanmaz.
-- Projenin stack bilgisi ve komutları proje `CLAUDE.md`'sindedir: `## Stack` (dil, framework, servisler) ve `## Komutlar` (`service`, `migrate`, `test`, `seed`, `migrations`; biçim `- anahtar: \`değer\``). `/initer` oluşturur, stack değişince aynı branch'te güncellenir; prova ve güncelleme `## Komutlar`'ı okur. Veri servisleri, motorları ve portlar `compose.yaml`'dan çıkarılır, ayrıca yazılmaz.
+- Projenin stack bilgisi ve komutları proje `CLAUDE.md`'sindedir: `## Stack` (dil, framework, servisler) ve `## Komutlar` (`service`, `migrate`, `test`, `seed`, `migrations`; biçim `- anahtar: \`değer\``). `/initer` oluşturur, stack değişince aynı branch'te güncellenir; prova ve güncelleme `## Komutlar`'ı okur. Veri servisleri, motorları ve portlar compose dosyalarından çıkarılır, ayrıca yazılmaz.
 
 ## Ağ Erişimi
 - Uygulama ve arayüz servisleri yerel ağdan ve Tailscale'den erişilebilir olmalı:

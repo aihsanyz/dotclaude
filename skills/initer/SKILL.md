@@ -1,6 +1,6 @@
 ---
 name: initer
-description: Bulunulan klasörü bu çalışma düzeninin en küçük haline getirir; kod yazmaz, stack seçmez. Git, private GitHub reposu, main/development branch'leri, README.md, proje CLAUDE.md'si (boş ## Stack ve ## Komutlar), docs/reports/ ve en küçük Docker dosyalarını (compose.yaml, .dockerignore, .env.example, .gitignore) ekler. Yeni bir projeye başlanırken, bir projede ilk kez çalışılacağında, proje CLAUDE.md'sinde ## Komutlar bölümü yoksa veya kullanıcı /initer dediğinde kullan.
+description: Bulunulan klasörü bu çalışma düzeninin en küçük haline getirir; kod yazmaz, stack seçmez. Git, private GitHub reposu, main/development branch'leri, README.md, proje CLAUDE.md'si (boş ## Stack ve ## Komutlar), docs/reports/ ve development/production ayrımlı en küçük Docker dosyalarını (compose.dev.yaml, compose.prod.yaml, .env.example, .env.production.example, .dockerignore, .gitignore) ekler. Yeni bir projeye başlanırken, bir projede ilk kez çalışılacağında, proje CLAUDE.md'sinde ## Komutlar bölümü yoksa veya kullanıcı /initer dediğinde kullan.
 ---
 
 # /initer
@@ -12,7 +12,7 @@ Mevcut dosyalara dokunma; yalnızca eksik olanları ekle. Tüm git komutlarında
 ## 1. Klasörün durumunu belirle
 Klasör kullanıcının oturumu açtığı dizindir (`pwd`); proje adı klasör adıdır.
 - `gh auth status` başarısızsa dur ve bildir.
-- Proje `CLAUDE.md`'sinde `## Komutlar` bölümü varsa init yapılmıştır. Yalnızca bu makinede development ortamı eksikse tamamla (ör. proje yeni clone edildi): ana klasörü `development`'a geçir ve `origin/development` ile eşitle, `.env` yoksa `.env.example`'dan oluştur (`COMPOSE_PROJECT_NAME=<proje>-dev`); `compose.yaml`'da servis varsa `~/.claude/scripts/deploy.sh apply <ana klasör> --bootstrap`. Sonra bildir ve bitir.
+- Proje `CLAUDE.md`'sinde `## Komutlar` bölümü varsa init yapılmıştır. Yalnızca bu makinede development ortamı eksikse tamamla (ör. proje yeni clone edildi): ana klasörü `development`'a geçir ve `origin/development` ile eşitle, `.env` yoksa `.env.example`'dan oluştur (`COMPOSE_PROJECT_NAME=<proje>-dev`); compose dosyasında servis varsa (`docker compose config --services` boş değil) `~/.claude/scripts/deploy.sh apply <ana klasör> --bootstrap`. Sonra bildir ve bitir.
 - Aksi halde:
 
 | Durum | Akış |
@@ -27,15 +27,33 @@ Yalnızca eksik olanları ekle; var olanı değiştirme. Var olan `CLAUDE.md`'de
 - `README.md`: `# <proje adı>` ve kullanıcı bir cümle verdiyse o cümle.
 - `CLAUDE.md`: aşağıdaki şablon.
 - `docs/reports/.gitkeep`
-- `compose.yaml`:
-  ```yaml
-  services: {}
-  ```
-- `.dockerignore`: `.git`, `.env`, `docs/`
-- `.gitignore`: `.env`
-- `.env.example`: `COMPOSE_PROJECT_NAME=<proje>-dev`
+- Development ve production ayrımı (global `CLAUDE.md`, Docker ile Geliştirme): her ortamın kendi compose dosyası vardır, `.env`'deki `COMPOSE_FILE` hangisinin kullanılacağını seçer.
+  - `compose.dev.yaml` (development ortamı ve worktree'ler; servisler eklendiğinde bind mount, hot reload, Dockerfile'ın `dev` target'ı):
+    ```yaml
+    # Development: bind mount + hot reload, Dockerfile target "dev".
+    services: {}
+    ```
+  - `compose.prod.yaml` (production; kod image içinde, bind mount yok, Dockerfile'ın `prod` target'ı, `restart: unless-stopped`):
+    ```yaml
+    # Production: code baked into the image, Dockerfile target "prod", no bind mounts.
+    services: {}
+    ```
+  - `.env.example`:
+    ```
+    COMPOSE_FILE=compose.dev.yaml
+    COMPOSE_PROJECT_NAME=<proje>-dev
+    ```
+  - `.env.production.example`:
+    ```
+    COMPOSE_FILE=compose.prod.yaml
+    COMPOSE_PROJECT_NAME=<proje>
+    ```
+- `.dockerignore`: `.git`, `.env`, `.env.*`, `!.env*.example`, `docs/`
+- `.gitignore`: `.env`, `.env.production`
 
-`Dockerfile`, uygulama kodu, migration, test ve seed eklenmez; stack belirlendiğinde ilgili işte eklenir ve `## Stack` ile `## Komutlar` o işte doldurulur.
+Mevcut projede zaten bir compose dosyası (`compose.yaml`, `docker-compose.yml` vb.) varsa compose dosyalarını ve `COMPOSE_FILE`'ı ekleme, var olanı bölme veya taşıma; bunu bildir, ayrım ayrı bir işte yapılır.
+
+`Dockerfile`, uygulama kodu, migration, test ve seed eklenmez; stack belirlendiğinde ilgili işte eklenir (Dockerfile `dev` ve `prod` target'larıyla) ve `## Stack` ile `## Komutlar` o işte doldurulur.
 
 ## A. Git'e alınmamış klasör
 1. Klasör doluysa gizli bilgi kontrolü: `.env`, anahtar dosyaları ve benzerleri `.gitignore`'da mı bak; `git init -b main` sonrası `~/.claude/scripts/scan.sh fs` ile tara. Gizli bilgi bulunursa dur ve sor.
@@ -63,11 +81,11 @@ Yalnızca eksik olanları ekle; var olanı değiştirme. Var olan `CLAUDE.md`'de
 ## Development ortamı
 - Ana klasör `development` branch'inde olmalı.
 - `.env` yoksa `.env.example`'dan oluştur (`COMPOSE_PROJECT_NAME=<proje>-dev`).
-- `compose.yaml`'da servis yoksa container başlatılmaz; ilk servis eklendiğinde `/merge` ortamı ilk kez kurar. Servis varsa `~/.claude/scripts/deploy.sh apply <ana klasör> --bootstrap` ve `local.md`'deki adresleri bildir.
+- Compose dosyasında servis yoksa container başlatılmaz; ilk servis eklendiğinde `/merge` ortamı ilk kez kurar. Servis varsa `~/.claude/scripts/deploy.sh apply <ana klasör> --bootstrap` ve `local.md`'deki adresleri bildir.
 - Kısa özet: repo adresi, branch'ler, eklenen dosyalar.
 
 ## Şablon: proje `CLAUDE.md`
-`## Komutlar` bölümünü `deploy.sh` okur; biçimi koru (`- anahtar: \`değer\``) ve yalnızca projede olan anahtarları yaz. Init'te bölüm boş kalır; stack belirlendiğinde doldurulur. Servisler ve portlar `compose.yaml`'dan çıkarılır; burada tekrar yazılmaz.
+`## Komutlar` bölümünü `deploy.sh` okur; biçimi koru (`- anahtar: \`değer\``) ve yalnızca projede olan anahtarları yaz. Init'te bölüm boş kalır; stack belirlendiğinde doldurulur. Servisler ve portlar compose dosyalarından çıkarılır; burada tekrar yazılmaz.
 
 ```markdown
 # <Proje adı>

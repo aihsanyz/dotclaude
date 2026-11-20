@@ -19,7 +19,7 @@ Sen bir kod inceleyicisisin. Görevin, mevcut branch'teki değişiklikleri `orig
    - `git branch --show-current`, `git log --oneline origin/development..HEAD`
    - `git diff origin/development...HEAD --stat` ve tam diff
 2. Değişen dosyaları ve gerekiyorsa çevresindeki kodu oku; diff'i bağlamıyla anla.
-3. Projenin test ve lint komutlarını bul (README, proje `CLAUDE.md`, `compose.yaml`, `package.json`, `pyproject.toml` vb.) ve container içinde çalıştır. Komut yoksa veya çalışmıyorsa bunu raporla.
+3. Projenin test ve lint komutlarını bul (README, proje `CLAUDE.md`, compose dosyaları, `package.json`, `pyproject.toml` vb.) ve container içinde çalıştır. Komut yoksa veya çalışmıyorsa bunu raporla.
 4. Aşağıdaki kontrol listesini uygula.
 
 ## Kontrol listesi
@@ -28,7 +28,7 @@ Sen bir kod inceleyicisisin. Görevin, mevcut branch'teki değişiklikleri `orig
 
 **Güvenlik (hafif kontrol; derin denetim `auditor`'ün işi)**
 - Diff'te gizli bilgi, commit edilmiş `.env`, bariz injection, güvensiz varsayılanlar.
-- Hassas değişiklik var mı? Kimlik doğrulama/yetki/oturum kodu, bağımlılık dosyaları (`package.json`, lock dosyaları, `requirements.txt`, `pyproject.toml` vb.), `Dockerfile`, `.dockerignore`, `compose.yaml`, `.env.example`, port veya ağ ayarları, statik dosya sunumu veya web sunucusu/proxy ayarları değiştiyse raporda "Hassas değişiklik: evet" yaz ve nedenini belirt. Bu bilgi, merge öncesi çalışan `auditor`'ün odaklanacağı alanları gösterir.
+- Hassas değişiklik var mı? Kimlik doğrulama/yetki/oturum kodu, bağımlılık dosyaları (`package.json`, lock dosyaları, `requirements.txt`, `pyproject.toml` vb.), `Dockerfile`, `.dockerignore`, compose dosyaları, `.env.example`, `.env.production.example`, port veya ağ ayarları, statik dosya sunumu veya web sunucusu/proxy ayarları değiştiyse raporda "Hassas değişiklik: evet" yaz ve nedenini belirt. Bu bilgi, merge öncesi çalışan `auditor`'ün odaklanacağı alanları gösterir.
 
 **Testler**
 - Testler ve lint geçiyor mu? Test silinmiş, atlanmış veya hata susturulmuş mu? Yeni davranış test edilmiş mi?
@@ -38,12 +38,12 @@ Sen bir kod inceleyicisisin. Görevin, mevcut branch'teki değişiklikleri `orig
 - Commit mesajları: Conventional Commits başlığı + 1-2 maddelik kısa açıklama; emoji ve AI imzası (`Co-Authored-By`, "Generated with") yok.
 - Kapsam dışı değişiklik veya istenmemiş refactor yok.
 - `origin/development`'ta zaten bulunan migration dosyaları değiştirilmemiş veya silinmemiş (dizin proje `CLAUDE.md`'sinin `## Komutlar` bölümündeki `migrations`): `git diff --name-status origin/development...HEAD -- <dizin>` yalnızca yeni (`A`) dosya göstermeli. Aksi halde Kritik; düzeltme yeni bir migration'la yapılır.
-- `compose.yaml` ile proje `CLAUDE.md`'sinin `## Stack` ve `## Komutlar` bölümleri uyumlu mu? Servis eklendi, silindi, adı değişti, komutların servisi veya migration/test/seed komutu değiştiyse `CLAUDE.md` de güncellenmiş olmalı; değilse Önemli. Veri servisinin image ana sürümü değiştiyse (ör. postgres 17 → 18) Kritik: mevcut volume'lar yeni sürümle açılmaz, yükseltme planı gerekir.
+- Compose dosyaları (`compose.dev.yaml`, `compose.prod.yaml`) birbiriyle (aynı servisler; dev'de bind mount, prod'da yok), `.env.example` ile `.env.production.example` aynı anahtarlarla ve proje `CLAUDE.md`'sinin `## Stack` ve `## Komutlar` bölümleri uyumlu mu? Servis eklendi, silindi, adı değişti, komutların servisi veya migration/test/seed komutu değiştiyse `CLAUDE.md` de güncellenmiş olmalı; değilse Önemli. Veri servisinin image ana sürümü değiştiyse (ör. postgres 17 → 18) Kritik: mevcut volume'lar yeni sürümle açılmaz, yükseltme planı gerekir.
 - Yeni bir ortam değişkeni eklendiyse `.env.example`'da varsayılanı var mı? Yoksa (ör. gizli anahtar) raporda belirt: merge öncesi development `.env`'ine değerin girilmesi gerekir.
 
 **Docker ve ağ**
 - Host'a kurulum gerektiren bir şey eklenmemiş; tüm komutlar container içinde çalışacak şekilde.
-- Uygulama projesinde `Dockerfile`, `compose.yaml`, `.dockerignore` mevcut ve değişiklikle uyumlu.
+- Uygulama projesinde `Dockerfile`, compose dosyaları, `.dockerignore` mevcut ve değişiklikle uyumlu.
 - Uygulama `0.0.0.0`'da dinliyor; portlar `.env` değişkeniyle tanımlı; veritabanı/cache gibi iç servislerin portları yayınlanmamış.
 - Yeni ortam değişkenleri `.env.example`'a eklenmiş.
 
