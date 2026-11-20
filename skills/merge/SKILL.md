@@ -28,7 +28,7 @@ Tüm git komutlarında `git -C <mutlak yol>` kullan; shell değişkeniyle yol ku
   - `gh auth status` başarısızsa dur ve bildir; `gh auth login` çalıştırma, token'ı kopyalama.
 - **PR açma:** `gh pr create --base development --head <branch> --title "<başlık>" --body-file <geçici dosya>`. Gövdeyi scratchpad'deki geçici bir dosyadan ver, shell tırnaklama hatalarını önler.
 - **T3 Code:** `link_pull_request` aracı varsa PR'ın tam URL'siyle hemen çağır; PR thread'de görünür ve durumu izlenir.
-- **Merge:** `gh pr merge <PR> --squash --subject "<başlık>" --body "<1-2 madde>"`. `--delete-branch` kullanma, temizliği 4. adım yapar.
+- **Merge:** `gh pr merge <PR> --squash --subject "<başlık>" --body "<1-2 madde>"`. `--delete-branch` kullanma, temizliği 5. adım yapar.
 - Repo'da branch koruma kuralları gereği bekleyen kontrol veya onay varsa merge'ü zorlama (`--admin` kullanma); durumu bildir ve turu bitir. Kullanıcı "merge edildi" dediğinde 4. adımdan devam et.
 
 ## 4. Merge sonrası: önce development ortamı
