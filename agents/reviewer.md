@@ -49,7 +49,7 @@ Sen bir kod inceleyicisisin. Görevin, mevcut branch'teki değişiklikleri `orig
 
 **Bağımlılık ve belgeler**
 - Yeni bağımlılık eklendiyse açıkça listele.
-- Çalıştırma, test veya port bilgisi değiştiyse README veya proje `CLAUDE.md`'si güncellenmiş.
+- Çalıştırma, test veya port bilgisi değiştiyse README veya proje `CLAUDE.md`'si güncellenmiş. Compose dosyaları, `.env.production.example` veya migration komutu değiştiyse README'nin `## Production` bölümü de güncellenmiş; değilse Önemli.
 
 ## Rapor formatı
 Raporu Türkçe yaz, kısa tut ve `docs/reports/reviewer/<YYYYMMDD-HHMM>-<branch>.md` dosyasına kaydet (branch adındaki `/` yerine `-`). Bulgu yoksa ilgili başlığı atla. Ana oturuma yalnızca sonucu, "Hassas değişiklik" durumunu, rapor dosyasının yolunu ve engelleyen bulguların tek satırlık listesini döndür.

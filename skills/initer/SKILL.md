@@ -24,7 +24,7 @@ Klasör kullanıcının oturumu açtığı dizindir (`pwd`); proje adı klasör 
 ## 2. İskelet dosyaları
 Yalnızca eksik olanları ekle; var olanı değiştirme. Var olan `CLAUDE.md`'de `## Stack` veya `## Komutlar` yoksa sadece eksik bölümü sona ekle. Var olan `.gitignore` ve `.dockerignore`'a yalnızca eksik satırları ekle.
 
-- `README.md`: `# <proje adı>` ve kullanıcı bir cümle verdiyse o cümle.
+- `README.md`: aşağıdaki şablon. Var olan README'de development/production çalıştırma bölümleri yoksa yalnızca onları sona ekle.
 - `CLAUDE.md`: aşağıdaki şablon.
 - `docs/reports/.gitkeep`
 - Development ve production ayrımı (global `CLAUDE.md`, Docker ile Geliştirme): her ortamın kendi compose dosyası vardır, `.env`'deki `COMPOSE_FILE` hangisinin kullanılacağını seçer.
@@ -83,6 +83,44 @@ Mevcut projede zaten bir compose dosyası (`compose.yaml`, `docker-compose.yml` 
 - `.env` yoksa `.env.example`'dan oluştur (`COMPOSE_PROJECT_NAME=<proje>-dev`).
 - Compose dosyasında servis yoksa container başlatılmaz; ilk servis eklendiğinde `/merge` ortamı ilk kez kurar. Servis varsa `~/.claude/scripts/deploy.sh apply <ana klasör> --bootstrap` ve `local.md`'deki adresleri bildir.
 - Kısa özet: repo adresi, branch'ler, eklenen dosyalar.
+
+## Şablon: `README.md`
+Servisler, migration komutu veya portlar eklendiğinde bu bölümler aynı işte güncellenir.
+
+````markdown
+# <Proje adı>
+
+<Projenin ne yaptığı, bir cümle; henüz yoksa boş bırak.>
+
+## Development
+Ortamı `.env`'deki `COMPOSE_FILE=compose.dev.yaml` seçer (bind mount, hot reload).
+
+```bash
+cp .env.example .env
+docker compose up -d --build
+docker compose logs -f
+```
+
+## Production
+Ortamı `.env`'deki `COMPOSE_FILE=compose.prod.yaml` seçer; kod image içindedir, bind mount yoktur. Komutlara `-f` verilmez.
+
+```bash
+git clone <repo> && cd <proje> && git checkout vX.Y.Z
+cp .env.production.example .env   # gizli değerleri doldur
+docker compose up -d --build
+```
+
+Güncelleme:
+
+```bash
+git fetch --tags && git checkout vX.Y.Z
+docker compose up -d --build
+# migration otomatik çalışmaz (stack belirlenince komut buraya yazılır):
+# docker compose run --rm <service> sh -c "<migrate>"
+```
+
+Aynı klasörde development `.env`'i de duruyorsa her komuta `--env-file .env.production` ekle (ör. `docker compose --env-file .env.production up -d --build`); eklenmezse komut development ortamına gider.
+````
 
 ## Şablon: proje `CLAUDE.md`
 `## Komutlar` bölümünü `deploy.sh` okur; biçimi koru (`- anahtar: \`değer\``) ve yalnızca projede olan anahtarları yaz. Init'te bölüm boş kalır; stack belirlendiğinde doldurulur. Servisler ve portlar compose dosyalarından çıkarılır; burada tekrar yazılmaz.

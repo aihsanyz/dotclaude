@@ -18,7 +18,7 @@
 - Mevcut koddaki stil ve kalıplara uy; istenmeden refactor yapma.
 - Yeni bağımlılık eklemeden önce sor.
 - Açıklayıcı olmayan yorumlar ekleme.
-- Çalıştırma, test ve port bilgisi değişirse projenin README veya `CLAUDE.md` dosyasını güncelle; yeni projede bunları içeren bir proje `CLAUDE.md`'si oluştur.
+- Çalıştırma, test ve port bilgisi değişirse projenin README veya `CLAUDE.md` dosyasını güncelle; yeni projede bunları içeren bir proje `CLAUDE.md`'si oluştur. README'de development ve production için çalıştırma, güncelleme ve migration komutları her zaman güncel durur.
 
 ## Git, Commit ve PR
 - **ÖNEMLİ:** `main` ve `development`'a doğrudan commit/push yapma (guard hook ile zorlanır); PR'ları kullanıcı istemeden açma veya merge etme.
