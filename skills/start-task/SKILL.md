@@ -31,8 +31,11 @@ Her biri için (`main`, `development`):
 - Git komutlarında yolları mutlak yaz ve shell değişkeni kullanma; guard hook değişkenli yolları doğrulayamaz.
 
 ## 5. Docker ortamı (yalnızca `compose.yaml` varsa)
+- Projenin development ortamı yoksa önce `dev-env` skill'inin kurulum adımlarını uygula; worktree veritabanları `<proje>_dev`'den kopyalanır.
 - `.env` yoksa `.env.example`'dan kopyala; `.env`'in `.gitignore`'da olduğunu doğrula.
-- `.env.example`'daki `*_PORT` değişkenleri için boş port seç (`ss -tlnp`, `docker ps --format '{{.Ports}}'`) ve `.env`'e yaz; çalışan diğer worktree'lerle çakışmamalı.
+- `COMPOSE_PROJECT_NAME=<proje>-<branch adındaki / yerine ->` yaz; container ve volume'lar development ortamından ayrı kalır.
+- `.env.example`'daki `*_PORT` değişkenleri için boş port seç (`ss -tlnp`, `docker ps --format '{{.Ports}}'`) ve `.env`'e yaz. `.env.example`'daki varsayılan portları kullanma, onlar development ortamına ayrılmıştır; çalışan diğer worktree'lerle de çakışmamalı.
+- Projenin kullandığı her ortak servis için worktree veritabanını oluştur: `~/.claude/scripts/db.sh clone <engine> <proje> <branch> --env-file <worktree>/.env`. Bağlantı bilgileri `.env`'e yazılır; çıktıya yazdırma.
 - `docker compose up -d --build`, ardından servislerin ayağa kalktığını kontrol et (`docker compose ps`).
 - Erişimi `local.md`'deki yerel ağ ve Tailscale adresleriyle `curl` kullanarak doğrula.
 - Proje çalıştırılabilir bir uygulama ama Docker dosyaları yoksa: worktree'yi aç, ardından global kurallara göre Docker dosyalarını eklemek için plan sun.

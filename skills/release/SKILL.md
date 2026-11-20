@@ -27,7 +27,7 @@ Tüm git komutlarında `git -C <mutlak yol>` kullan; shell değişkeniyle yol ku
 - `push` skill'inin adımlarını uygula (reviewer kapısı dahil).
 - `development`'a PR: başlık `docs(release): add vX.Y.Z notes`, squash merge. Auditor kapısı bu branch için uygulanmaz, çünkü 2. adımda denetlendi.
 - PR'ı `merge` skill'inin 3. adımındaki yöntemle aç ve merge et.
-- Merge sonrası yerel `development`'ı eşitle.
+- Merge sonrası yerel `development`'ı eşitle ve development ortamını güncelle (`dev-env` skill'i).
 
 ## 4. development → main
 - PR: kaynak `development`, hedef `main`; başlık ve açıklama releaser raporundaki release PR metni.

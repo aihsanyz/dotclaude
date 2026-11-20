@@ -34,8 +34,10 @@ Tüm git komutlarında `git -C <mutlak yol>` kullan; shell değişkeniyle yol ku
 ## 4. Merge sonrası
 - Merge'ün gerçekleştiğini doğrula: `gh pr view <PR> --json state` sonucu `MERGED` olmalı; ardından `git fetch origin --prune`.
 - Yerel `development`'ı eşitle (`start-task` skill'inin 3. adımındaki yöntem).
+- **Development ortamını güncelle:** `dev-env` skill'inin güncelleme adımları. Başarısız olursa temizliğe devam et ama sonucu özette bildir.
 - **Docker temizliği** (worktree'de `compose.yaml` varsa):
   - `docker compose down --rmi local`
+  - Her ortak servis için worktree veritabanını sormadan sil: `~/.claude/scripts/db.sh drop <engine> <proje> <branch>`. `<proje>_dev` asla silinmez; script de bunu reddeder.
   - Projeye ait volume'lar varsa (`docker volume ls --filter label=com.docker.compose.project=<proje>`) listele ve silmeden önce sor.
 - **Worktree:** `git -C <ana repo> worktree remove <worktree yolu>`. Commit edilmemiş değişiklik nedeniyle reddederse dur ve sor; `--force` kullanma.
 - **Branch'ler:**
