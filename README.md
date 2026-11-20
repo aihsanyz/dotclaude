@@ -9,7 +9,7 @@ The workflow it sets up:
 - `/push` gates pushes behind the `reviewer` agent, `/merge` gates squash merges into `development` behind the `auditor` security agent, `/release` merges `development` into `main` with a merge commit and tags `vX.Y.Z`.
 - All project tooling runs in Docker; nothing is installed on the host.
 - Each project keeps a long-running `development` environment in its main checkout, updated by `/merge` after every merge.
-- Each environment runs its own data services from the project's compose file; worktrees start with a copy of the development data (`deploy.sh copy-data`).
+- Each environment runs its own data services from the project's compose file; worktrees start with a fresh database (migrations + seed).
 - Before every merge, the post-merge procedure is rehearsed in the worktree (`scripts/deploy.sh`).
 - Agent reports are written to `docs/reports/<agent>/` in each project.
 
@@ -22,7 +22,7 @@ The workflow it sets up:
 | `settings.json` | Language, attribution and the git guard hook |
 | `agents/` | `reviewer`, `auditor`, `releaser` subagents |
 | `skills/` | `/initer`, `/tasker`, `/push`, `/merge`, `/release` |
-| `scripts/deploy.sh` | One standard procedure for the pre-merge rehearsal and the development update; copies development data into worktrees |
+| `scripts/deploy.sh` | One standard procedure for the pre-merge rehearsal and the development update |
 | `hooks/guard_git.py` | Blocks direct commits/pushes to `main`/`development` and force pushes |
 | `scripts/scan.sh` | gitleaks and trivy in pinned Docker images |
 | `scripts/release-info.sh` | Release facts and semver proposal |

@@ -62,12 +62,12 @@ Klasör kullanıcının oturumu açtığı dizindir (`pwd`).
    - Uygulama `0.0.0.0`'da mı, portlar `.env` değişkeniyle mi, `healthcheck` ve `restart: unless-stopped` var mı?
    - `.env.example` eksiksiz mi, `.env` `.gitignore`'da mı? Bind mount ve hot reload.
 4. **Planı onaylat** (`send_to_user`): proje `CLAUDE.md`'si (stack ve komutlar), dosya değişiklikleri ve dayandıkları kurallar, varsa yeni bağımlılıklar.
-5. **Uygula:** `/tasker chore/project-setup`. Development ortamı ve `## Komutlar` bölümü henüz olmadığından `tasker`'ın 5. adımındaki init ön koşulunu ve development kopyalamasını atla; veri servisleri boş başlar. Değişiklikleri Conventional Commits ile commit'le.
-6. **Merge:** `/merge` akışı; prova `deploy.sh rehearse <worktree> --bootstrap` ile çalışır. Reviewer ve auditor normal çalışır.
+5. **Uygula:** `/tasker chore/project-setup`. `## Komutlar` bölümü henüz olmadığından `tasker`'ın 5. adımındaki init ön koşulunu atla. Değişiklikleri Conventional Commits ile commit'le.
+6. **Merge:** normal `/merge` akışı. Prova temiz veritabanıyla çalıştığı için development ortamının henüz olmaması sorun değildir.
 7. **Development ortamını ilk kez kur** (`/merge`'ün 6. adımında `apply` yerine): ana klasörde `.env` yoksa `.env.example`'dan oluştur (`COMPOSE_PROJECT_NAME=<proje>-dev`), sonra `~/.claude/scripts/deploy.sh apply <ana klasör> --bootstrap`. `local.md`'deki adresleri bildir.
 
 ## Şablon: proje `CLAUDE.md`
-`## Komutlar` bölümünü `deploy.sh` okur; biçimi koru (`- anahtar: \`değer\``) ve yalnızca projede olan anahtarları yaz. Veri servisleri, motorları ve portlar `compose.yaml`'dan çıkarılır; burada tekrar yazılmaz.
+`## Komutlar` bölümünü `deploy.sh` okur; biçimi koru (`- anahtar: \`değer\``) ve yalnızca projede olan anahtarları yaz. Servisler ve portlar `compose.yaml`'dan çıkarılır; burada tekrar yazılmaz.
 
 ```markdown
 # <Proje adı>
@@ -80,7 +80,7 @@ Klasör kullanıcının oturumu açtığı dizindir (`pwd`).
 - Development ortamı: ana repo klasörü, `development` branch'i; her merge'den sonra `/merge` günceller. Yeni iş: `/tasker`.
 
 ## Komutlar
-<!-- deploy.sh bu bölümü okur. Biçim: "- anahtar: `değer`". Anahtarlar: service, migrate, test, seed, migrations, engines -->
+<!-- deploy.sh bu bölümü okur. Biçim: "- anahtar: `değer`". Anahtarlar: service, migrate, test, seed, migrations -->
 - service: `app`
 - migrate: `php artisan migrate --force`
 - test: `php artisan test`
@@ -92,6 +92,5 @@ Klasör kullanıcının oturumu açtığı dizindir (`pwd`).
 ```
 
 - `service`: komutların çalıştığı compose servisi; yazılmazsa `build:` olan ilk servis.
-- `seed`: yalnızca ilk kurulumda çalışır.
-- `engines`: yalnızca image adından anlaşılmayan veri servisleri için (ör. `db=postgres mq=redis`).
+- `seed`: her yeni worktree'de, her provada ve development'ın ilk kurulumunda çalışır. **Gerçekçi olmalı:** her tabloda birkaç örnek satır içersin; prova temiz veritabanıyla çalıştığı için veriye bağlı migration hatalarını (ör. dolu tabloya varsayılansız `NOT NULL` kolon) ancak seed verisi yakalar. Tekrar çalıştırıldığında hata vermemeli.
 - Komutlar container içinde çalışır: `docker compose run --rm <service> sh -c "<komut>"`.

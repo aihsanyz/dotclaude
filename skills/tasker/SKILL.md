@@ -32,12 +32,11 @@ Her biri için (`main`, `development`):
 
 ## 5. Docker ortamı (yalnızca `compose.yaml` varsa)
 - Proje `CLAUDE.md`'sinde `## Komutlar` bölümü yoksa dur: proje henüz hazırlanmamış, önce `/initer` çalıştırılmalı (bu skill `initer` içinden çağrıldıysa bu kontrolü ve development kopyalamasını atla).
-- Projenin development ortamı yoksa (ana klasörde `.env` yok veya container'lar çalışmıyor) önce `/initer` ile kur; worktree verisi development'tan kopyalanır.
 - `.env` yoksa `.env.example`'dan kopyala; `.env`'in `.gitignore`'da olduğunu doğrula.
 - `COMPOSE_PROJECT_NAME=<proje>-<branch adındaki / yerine ->` yaz; container ve volume'lar (veri servisleri dahil) development ortamından ayrı kalır.
 - `.env.example`'daki `*_PORT` değişkenleri için boş port seç (`ss -tlnp`, `docker ps --format '{{.Ports}}'`) ve `.env`'e yaz. `.env.example`'daki varsayılan portları kullanma, onlar development ortamına ayrılmıştır; çalışan diğer worktree'lerle de çakışmamalı.
 - **Bellek:** Her worktree kendi veri servislerini çalıştırır (MySQL ~450 MB, PostgreSQL ~60 MB). Açmadan önce `free -m` ile kullanılabilir belleğe bak; yetersizse kullanıcıyı uyar ve kullanılmayan bir worktree'nin durdurulmasını öner.
-- Development verisini kopyala: `~/.claude/scripts/deploy.sh copy-data <worktree>`. Veri servisleri ve motorları `compose.yaml`'dan anlaşılır ve başlatılır; Redis gibi önbellekler boş başlar.
+- Veritabanını hazırla: veri servislerini başlat (`docker compose up -d --wait <image ile tanımlı servisler>`), sonra `## Komutlar`'daki `migrate` ve `seed` komutlarını `docker compose run --rm <service> sh -c "<komut>"` ile çalıştır. Worktree temiz bir veritabanı ve seed verisiyle başlar.
 - `docker compose up -d --build`, ardından servislerin ayağa kalktığını kontrol et (`docker compose ps`).
 - Erişimi `local.md`'deki yerel ağ ve Tailscale adresleriyle `curl` kullanarak doğrula.
 - Proje çalıştırılabilir bir uygulama ama Docker dosyaları yoksa: worktree'yi aç, ardından global kurallara göre Docker dosyalarını eklemek için plan sun.
@@ -48,7 +47,7 @@ Kısa özet: branch, worktree yolu, taban commit'i, varsa erişim adresleri ve d
 ## 7. Geliştirme sırasında: proje `CLAUDE.md`'sini güncel tut
 Bu işte aşağıdakilerden biri değişirse proje `CLAUDE.md`'sinin `## Stack` ve `## Komutlar` bölümlerini **aynı commit'te** güncelle:
 - `compose.yaml`'da servis eklendi, silindi veya yeniden adlandırıldı; komutların çalıştığı servis değişti.
-- Bir veri servisinin image'ı veya motoru değişti. **Ana sürüm yükseltmesi** (ör. postgres 17 → 18) mevcut volume'larla açılmaz: değişiklikten önce kullanıcıya bildir ve yükseltme planı sun. Image adı motoru göstermiyorsa `engines` satırını ekle.
-- Migration, test veya seed komutu ya da migration dizini değişti.
+- Bir veri servisinin image'ı veya motoru değişti. **Ana sürüm yükseltmesi** (ör. postgres 17 → 18) development'ın mevcut volume'larıyla açılmaz: değişiklikten önce kullanıcıya bildir ve yükseltme planı sun.
+- Migration, test veya seed komutu ya da migration dizini değişti; yeni tablolar için seed'e örnek satır eklenmeli.
 
 Güncellemenin doğruluğu `/merge`'deki provada test edilir: `## Komutlar`'daki bir komut yanlışsa prova başarısız olur. Reviewer da `compose.yaml` ile proje `CLAUDE.md`'sinin uyumunu `/push`'ta denetler.
