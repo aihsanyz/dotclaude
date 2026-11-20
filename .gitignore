@@ -1,0 +1,28 @@
+# Whitelist: ignore everything, then allow only shareable configuration.
+# Never un-ignore .credentials.json, projects/, sessions/, caches, plugins/ or local.md.
+*
+
+!.gitignore
+!README.md
+!CLAUDE.md
+!local.example.md
+!settings.json
+
+!agents/
+!agents/*.md
+
+!hooks/
+!hooks/*.py
+
+!scripts/
+!scripts/*.sh
+
+!skills/
+!skills/start-task/
+!skills/start-task/SKILL.md
+!skills/push/
+!skills/push/SKILL.md
+!skills/merge/
+!skills/merge/SKILL.md
+!skills/release/
+!skills/release/SKILL.md
