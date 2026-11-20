@@ -17,7 +17,7 @@
 #            apply: on development and equal to origin/development, clean tree
 #   env      add variables from .env.example missing in .env (fails if a new one has no default)
 #   data     start the data services; rehearse: back up the worktree data and replace it with
-#            a copy of development; apply: back up development data (when there are migrations)
+#            a copy of development; apply: no backup (failures are fixed forward with a new task)
 #   build    docker compose build
 #   migrate  MIGRATE_CMD in APP_SERVICE
 #   up       docker compose up -d --wait
@@ -138,8 +138,6 @@ data() {
     [[ $bootstrap == 0 ]] && copyable "$engine" || continue
     if [[ $mode == rehearse ]]; then
       "$DB" backup "$dir" "$svc" && "$DB" copy-from-dev "$dir" "$svc" || return 1
-    elif [[ -n ${C[MIGRATE_CMD]:-} ]]; then
-      "$DB" backup "$dir" "$svc" || return 1
     fi
   done < <(data_services)
 }

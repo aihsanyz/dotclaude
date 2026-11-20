@@ -1,6 +1,6 @@
 ---
 name: dev-env
-description: Projenin sürekli ayakta duran development ortamını yönetir; ilk kurulum, merge sonrası güncelleme (build, yedek, migration, yeniden başlatma, doğrulama), durum, loglar, yeniden başlatma, yedek ve geri yükleme. Kullanıcı development ortamını kurmak, güncellemek, durumunu görmek veya yeniden başlatmak istediğinde (/dev-env) ve merge/release sonrasında kullan.
+description: Projenin sürekli ayakta duran development ortamını yönetir; ilk kurulum, merge sonrası güncelleme (build, migration, yeniden başlatma, doğrulama), durum, loglar, yeniden başlatma, yedek ve geri yükleme. Kullanıcı development ortamını kurmak, güncellemek, durumunu görmek veya yeniden başlatmak istediğinde (/dev-env) ve merge/release sonrasında kullan.
 ---
 
 # /dev-env [kurulum | güncelle | durum | log | yeniden-başlat | yedek | geri-yükle]
@@ -19,8 +19,8 @@ Her projenin `development` ortamı ana repo klasöründe, `development` branch'i
 
 ## güncelle (her merge'den sonra)
 1. `development`'ı `origin/development` ile fast-forward eşitle.
-2. `~/.claude/scripts/deploy.sh apply <ana repo>`. Adımlar: kontroller, ortam değişkeni eşitleme, yedek, build, migration, `up`, sağlık kontrolü. `RESULT: ok` başarıdır.
-3. Başarısız olursa script'in gösterdiği adımı, son çıktıyı ve alınan yedeğin yolunu bildir. Geri alma yapılmaz; hemen `/tasker fix/...` ile düzeltmeye geç (`merge` skill'inin 8. adımı).
+2. `~/.claude/scripts/deploy.sh apply <ana repo>`. Adımlar: kontroller, ortam değişkeni eşitleme, veri servislerini başlatma, build, migration, `up`, sağlık kontrolü. `RESULT: ok` başarıdır.
+3. Başarısız olursa script'in gösterdiği adımı ve son çıktıyı bildir. Geri alma yapılmaz; hemen `/tasker fix/...` ile düzeltmeye geç (`merge` skill'inin 8. adımı).
 
 ## durum / log / yeniden-başlat
 - Durum: `docker compose ps`, son commit (`git log -1 --oneline`), adreslerin `curl` sonucu.
@@ -28,5 +28,5 @@ Her projenin `development` ortamı ana repo klasöründe, `development` branch'i
 - Yeniden başlatma: `docker compose restart [servis]`.
 
 ## yedek / geri-yükle
-- Yedek: `~/.claude/scripts/db.sh backup <ana repo> [servis]` (servis başına son 5 yedek, `~/infra/backups/<proje>/<servis>/`). Listesi: `db.sh backups <ana repo>`.
+- Yedek merge akışında otomatik alınmaz; kullanıcı istediğinde: `~/.claude/scripts/db.sh backup <ana repo> [servis]` (servis başına son 5 yedek, `~/infra/backups/<proje>/<servis>/`). Listesi: `db.sh backups <ana repo>`.
 - Geri yükleme development verisinin üzerine yazar ve geri alınamaz: hangi yedeğin kullanılacağını göster, kullanıcının açık onayını al, sonra `db.sh restore <ana repo> <servis> <dosya> --yes`.

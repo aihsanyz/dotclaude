@@ -48,7 +48,7 @@ Merge sonrası development'ta çalışacak standart işlemin birebir aynısı wo
 ## 6. Merge sonrası: standart işlemin development'ta uygulanması
 - Merge'ün gerçekleştiğini doğrula: `gh pr view <PR> --json state` sonucu `MERGED` olmalı; ardından `git fetch origin --prune`.
 - Yerel `development`'ı eşitle (`tasker` skill'inin 3. adımındaki yöntem).
-- `~/.claude/scripts/deploy.sh apply <ana repo>`: provadaki adımların aynısı (veri adımında yedek alınır, testler çalışmaz). `RESULT: ok` ise başarılıdır.
+- `~/.claude/scripts/deploy.sh apply <ana repo>`: provadaki adımların aynısı (veri kopyalanmaz ve yedeklenmez, testler çalışmaz). `RESULT: ok` ise başarılıdır.
 - Prova geçtiyse burada hata beklenmez. Yine de başarısız olursa geri alma yapılmaz; 7. adımdan sonra doğrudan düzeltmeye geçilir (8. adım).
 
 ## 7. Temizlik (her durumda)
