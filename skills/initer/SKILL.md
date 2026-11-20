@@ -5,14 +5,16 @@ description: Bulunulan klasörü bu çalışma düzenine göre kurar; klasör bo
 
 # /initer
 
-Bulunulan klasörde bir kez çalışır; `/tasker`, `/push`, `/merge`, `/release` ve `/dev-env` bundan sonra kullanılır. Amaç: stack bilgisinin bir kez çıkarılıp `.claude/stack.toml`'a yazılması, projenin global `CLAUDE.md` kurallarına uyması ve development ortamının ayakta olması.
+Bulunulan klasörde bir kez çalışır; `/tasker`, `/push`, `/merge` ve `/release` bundan sonra kullanılır. Amaç: stack bilgisinin bir kez çıkarılıp `.claude/stack.toml`'a yazılması, projenin global `CLAUDE.md` kurallarına uyması ve development ortamının ayakta olması.
 
 Tüm git komutlarında `git -C <mutlak yol>` kullan. Bir adım başarısız olursa dur ve bildir.
 
 ## 1. Klasörün durumunu belirle
 Klasör kullanıcının oturumu açtığı dizindir (`pwd`).
 - `gh auth status` başarısızsa dur ve bildir.
-- `.claude/stack.toml` zaten varsa init yapılmıştır: dosyayı projeyle karşılaştır, farkları göster; yalnızca güncelleme gerekiyorsa D akışına geç.
+- `.claude/stack.toml` zaten varsa init yapılmıştır:
+  - Development ortamı bu makinede kurulu değilse (ana klasörde `.env` yok veya container'lar çalışmıyor; ör. sunucu yenilendi, proje yeni clone edildi): ana klasörü `development`'a geçir ve `origin/development` ile eşitle, `.env` yoksa `.env.example`'dan oluştur (`COMPOSE_PROJECT_NAME=<proje>-dev`), sonra `~/.claude/scripts/deploy.sh apply <ana klasör> --bootstrap`. Veri boş başlar, seed çalışır.
+  - Dosyayı projeyle karşılaştır, farkları göster; yalnızca güncelleme gerekiyorsa D akışına geç.
 - Aksi halde duruma göre akış seç:
 
 | Durum | Akış |
@@ -40,7 +42,7 @@ Klasör kullanıcının oturumu açtığı dizindir (`pwd`).
    - Bağımlılıkları host'a değil, container içinde kur (ör. lock dosyasını `docker run --rm` ile üret).
 4. **Yerinde doğrula** (henüz git yok, düzeltmeler doğrudan yapılır): `.env.example`'dan `.env` oluştur, `COMPOSE_PROJECT_NAME=<ad>-dev`; `docker compose up -d --build --wait`, migration, seed ve testleri container içinde çalıştır, sağlık uç noktasını `curl` ile kontrol et. Geçene kadar düzelt. Bu ortam development ortamı olarak kalır.
 5. **Git:** `git init -b main`, ilk commit (`feat: initial project setup`), ardından "Ortak: GitHub reposu".
-6. **Standart işlem:** `~/.claude/scripts/deploy.sh apply <klasör>` (veri zaten var; yedek, migration ve sağlık kontrolü standart sırayla). `local.md`'deki adresleri bildir.
+6. **Standart işlem:** `~/.claude/scripts/deploy.sh apply <klasör>` (veri zaten var; migration ve sağlık kontrolü standart sırayla). `local.md`'deki adresleri bildir.
 
 ## B. Git'e alınmamış proje
 1. Gizli bilgi kontrolü: commit'ten önce `.env`, anahtar dosyaları ve benzerleri için `.gitignore`'u kontrol et; `git init -b main` sonrası `~/.claude/scripts/scan.sh fs` ile tara. Gizli bilgi bulunursa dur ve kullanıcıya sor.
@@ -111,7 +113,7 @@ Ayrıntılar `.claude/stack.toml`'da; stack, servisler ve komutlar için önce o
 - <dil / framework>, veri: <servisler>
 
 ## Çalıştırma
-- Development ortamı: ana repo klasörü, `development` branch'i (`/dev-env`).
+- Development ortamı: ana repo klasörü, `development` branch'i; her merge'den sonra `/merge` günceller.
 - Yeni iş: `/tasker`; komutlar container içinde: `docker compose run --rm <servis> <komut>`.
 
 ## Notlar

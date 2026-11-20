@@ -32,7 +32,7 @@ Her biri için (`main`, `development`):
 
 ## 5. Docker ortamı (yalnızca `compose.yaml` varsa)
 - Projede `.claude/stack.toml` yoksa dur: proje henüz hazırlanmamış, önce `/initer` çalıştırılmalı (bu skill `initer` içinden çağrıldıysa bu kontrolü ve development kopyalamasını atla).
-- Projenin development ortamı yoksa önce `dev-env` skill'inin kurulum adımlarını uygula; worktree verisi development'tan kopyalanır.
+- Projenin development ortamı yoksa (ana klasörde `.env` yok veya container'lar çalışmıyor) önce `/initer` ile kur; worktree verisi development'tan kopyalanır.
 - `.env` yoksa `.env.example`'dan kopyala; `.env`'in `.gitignore`'da olduğunu doğrula.
 - `COMPOSE_PROJECT_NAME=<proje>-<branch adındaki / yerine ->` yaz; container ve volume'lar (veri servisleri dahil) development ortamından ayrı kalır.
 - `.env.example`'daki `*_PORT` değişkenleri için boş port seç (`ss -tlnp`, `docker ps --format '{{.Ports}}'`) ve `.env`'e yaz. `.env.example`'daki varsayılan portları kullanma, onlar development ortamına ayrılmıştır; çalışan diğer worktree'lerle de çakışmamalı.

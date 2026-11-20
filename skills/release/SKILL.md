@@ -27,13 +27,13 @@ Tüm git komutlarında `git -C <mutlak yol>` kullan; shell değişkeniyle yol ku
 - `releases/vX.Y.Z.md` ve `docs/reports/` altındaki yeni raporları `docs(release): add vX.Y.Z notes` ile commit'le.
 - `push` skill'inin adımlarını uygula (reviewer kapısı dahil).
 - `development`'a PR: başlık `docs(release): add vX.Y.Z notes`, squash merge. Auditor kapısı bu branch için uygulanmaz, çünkü 2. adımda denetlendi.
-- PR'ı `merge` skill'inin 3. adımındaki yöntemle aç ve merge et.
-- Merge sonrası yerel `development`'ı eşitle ve development ortamını güncelle (`dev-env` skill'i).
+- PR'ı `merge` skill'inin 5. adımındaki yöntemle aç ve merge et.
+- Merge sonrası yerel `development`'ı eşitle ve development ortamını güncelle: `~/.claude/scripts/deploy.sh apply <ana repo>`.
 
 ## 4. development → main
 - PR: kaynak `development`, hedef `main`; başlık ve açıklama releaser raporundaki release PR metni.
 - Yöntem: **merge commit**. Squash veya rebase kullanma, `main` ile `development`'ın geçmişi ayrışır.
-- PR'ı `merge` skill'inin 3. adımındaki `gh` yöntemiyle aç (`--base main --head development`); merge'de `--squash` yerine `gh pr merge <PR> --merge` kullan.
+- PR'ı `merge` skill'inin 5. adımındaki `gh` yöntemiyle aç (`--base main --head development`); merge'de `--squash` yerine `gh pr merge <PR> --merge` kullan.
 
 ## 5. Etiket
 - `git -C <ana repo> fetch origin --prune`; yerel `main` ve `development`'ı eşitle.
