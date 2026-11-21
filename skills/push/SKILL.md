@@ -22,9 +22,9 @@ Tüm git komutlarında `git -C <worktree mutlak yolu>` kullan; shell değişkeni
 ## 3. Reviewer kapısı
 - **Atlama kuralı:** Son reviewer raporu bu branch için "Hazır" ise ve o raporun eklendiği commit'ten (`git log -1 --format=%H -- docs/reports/reviewer/`) bu yana yalnızca `docs/reports/` altı değiştiyse reviewer'ı çalıştırma, 5. adıma geç.
 - Aksi halde `reviewer` agent'ını worktree yolu ve branch adıyla çalıştır.
-- Sonuç "Düzeltme gerekli" ise:
-  - Bulguları kullanıcıya kısaca bildir, düzelt, değişiklikleri commit'le ve reviewer'ı tekrar çalıştır.
-  - İki düzeltme turundan sonra hâlâ geçmiyorsa dur ve kullanıcıya sor.
+- Sonuç "Düzeltme gerekli" ise push yapma ve kendiliğinden düzeltme:
+  - Rapor yolunu, engelleyen bulguları ve yapılması gerekenleri kısa maddelerle özetle; kullanıcının yönlendirmesini bekle ve turu bitir. Raporu commit'leme.
+  - Kullanıcı düzeltme isterse düzelt, Conventional Commits ile commit'le ve `/push`'u baştan çalıştır.
 
 ## 4. Raporu commit'le
 - `git add docs/reports/reviewer/<rapor dosyası>`

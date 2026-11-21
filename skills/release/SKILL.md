@@ -19,7 +19,7 @@ Tüm git komutlarında `git -C <mutlak yol>` kullan; shell değişkeniyle yol ku
 - `auditor`'ü release worktree'sinde `origin/main..HEAD` kapsamıyla çalıştır.
 - Ardından `releaser`'ı aynı worktree'de çalıştır.
 - Releaser raporunu (sürüm numarası, gerekçe, `releases/vX.Y.Z.md` içeriği, release PR metni) `send_to_user` ile kullanıcıya göster ve onay iste; turu bitir.
-- Rapor "Engellendi" ise engelleri bildir ve dur. Worktree'yi raporlar incelenebilsin diye bırak ve yolunu söyle.
+- Rapor "Engellendi" ise engelleri ve yapılması gerekenleri kısa maddelerle özetle ve dur; kendiliğinden düzeltme. Worktree'yi raporlar incelenebilsin diye bırak ve yolunu söyle.
 
 ## 3. Onaydan sonra: sürüm notu development'a
 - `git -C <release worktree> switch -c release/vX.Y.Z`

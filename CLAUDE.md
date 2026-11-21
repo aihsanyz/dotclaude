@@ -13,6 +13,7 @@
 - Kritik belirsizliklerde sor; küçük konularda makul varsayımı yap ve bunu belirt.
 - Değişiklikten sonra projenin test/lint komutlarını çalıştır; başarısızsa çıktıyı göster.
 - Testi geçirmek için testi silme, atlama veya hatayı susturma; sorunun asıl nedenini bul.
+- Bir kapı (reviewer, auditor, prova) veya development güncellemesi başarısız olursa kendiliğinden düzeltme: sonucu ve rapor yolunu ver, yapılması gerekenleri kısa maddelerle özetle ve kullanıcının yönlendirmesini bekle. Düzeltme kullanıcı isteyince başlar.
 
 ## Kod
 - Mevcut koddaki stil ve kalıplara uy; istenmeden refactor yapma.
@@ -56,7 +57,7 @@
 ## Development Ortamı ve Veri Servisleri
 - Her projenin `development` ortamı ana repo klasöründe (`development` branch'i) sürekli ayakta durur: `.env.example`'daki varsayılan portlar ve `COMPOSE_PROJECT_NAME=<proje>-dev`. Her merge'den sonra güncellenir. `main` için ortam tutulmaz.
 - **ÖNEMLİ:** Merge sonrası development'ta tek bir standart işlem çalışır (`~/.claude/scripts/deploy.sh apply`: ortam değişkeni eşitleme, build, migration, `up`, sağlık kontrolü). Merge'den önce aynısı worktree'de, temiz bir veritabanıyla provadan geçer (`deploy.sh rehearse`); prova geçmeden merge yapılmaz. Hatalar merge öncesinde yakalanır ve aynı branch'te düzeltilir.
-- Merge sonrası development güncellemesi yine de başarısız olursa geri alma yapılmaz: hatayı bildir ve hemen `/tasker fix/...` ile düzeltmeye geç; düzeltme önceliklidir.
+- Merge sonrası development güncellemesi yine de başarısız olursa geri alma yapılmaz: hatayı bildir, yapılması gerekenleri özetle ve `/tasker fix/...` ile düzeltmeyi öner; düzeltme önceliklidir ama kullanıcı isteyince başlar.
 - Development ortamının durumu, logları ve yeniden başlatılması için ana klasörde `docker compose ps/logs/restart`. Veri yedeği ve geri yükleme yapılmaz.
 - Migration'lar: development'ta uygulanmış bir migration asla düzenlenmez, düzeltme yeni bir migration'la yapılır. Henüz merge edilmemiş branch'in kendi migration'ları düzenlenebilir. MySQL'de yarım kalmış bir migration için nasıl ilerleneceğini kullanıcıya sor.
 - Veri servisleri (PostgreSQL, MySQL, MariaDB, MongoDB, Redis vb.) projenin compose dosyasında tanımlanır. Development ve her worktree kendi container'larını ve volume'larını kullanır; portları yayınlanmaz. Bağlantı bilgileri resmi image değişkenleriyle (`POSTGRES_*`, `MYSQL_*`, `MARIADB_*`, `MONGO_INITDB_*`) `.env.example`'da durur.
