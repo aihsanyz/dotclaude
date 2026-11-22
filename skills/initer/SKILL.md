@@ -7,7 +7,7 @@ description: Bulunulan klasörü bu çalışma düzeninin en küçük haline get
 
 Bulunulan klasörde bir kez çalışır; `/tasker`, `/push`, `/merge` ve `/release` bundan sonra kullanılır. Amaç yalnızca klasörün iskeletini kurmaktır: **kod yazılmaz, stack seçilmez, bağımlılık kurulmaz, uygulama ayağa kaldırılmaz.** Projenin fikri, stack'i ve kodu sonraki işlerde şekillenir.
 
-Mevcut dosyalara dokunma; yalnızca eksik olanları ekle. Tüm git komutlarında `git -C <mutlak yol>` kullan. Bir adım başarısız olursa dur ve bildir.
+Mevcut dosyalara dokunma; yalnızca eksik olanları ekle. Initer push, PR açma ve merge yapmaz (yeni reponun ilk `main` ve `development` push'u hariç); bir PR gerekiyorsa raporlayıp `/merge`'ü önerir. Tüm git komutlarında `git -C <mutlak yol>` kullan. Bir adım başarısız olursa dur ve bildir.
 
 ## 1. Klasörün durumunu belirle
 Klasör kullanıcının oturumu açtığı dizindir (`pwd`); proje adı klasör adıdır.
@@ -70,8 +70,9 @@ Mevcut geçmiş olduğu gibi gönderilir; iskelet `main`'e doğrudan değil, C a
 ## C. Mevcut proje
 1. `git fetch origin --prune`. `origin/main` yoksa dur ve sor. `origin/development` yoksa oluştur: `git push origin origin/main:refs/heads/development`.
 2. Ana klasörün çalışma alanı temiz değilse dur ve sor; temizse `git switch development` ve `origin/development` ile eşitle.
-3. Eksik iskelet dosyası varsa: `/tasker chore/project-setup` ile worktree aç (`## Komutlar` henüz olmadığından tasker'ın init ön koşulunu atla), eksikleri ekle, `chore: add project skeleton` ile commit'le. Worktree'de `.env` yoksa (iskelet compose dosyaları tasker'dan sonra eklendi) tasker'ın 5. adımını yeniden uygula; prova `.env` olmadan çalışmaz. Ardından normal `/push` ve `/merge` akışı.
-4. "Development ortamı".
+3. Eksik iskelet dosyası varsa: `/tasker chore/project-setup` ile worktree aç (`## Komutlar` henüz olmadığından tasker'ın init ön koşulunu atla), eksikleri ekle, `chore: add project skeleton` ile commit'le. Worktree'de `.env` yoksa (iskelet compose dosyaları tasker'dan sonra eklendi) tasker'ın 5. adımını yeniden uygula; prova `.env` olmadan çalışmaz.
+4. **Dur ve raporla; push ve merge yapma:** worktree yolu, branch, commit, eklenen dosyalar ve kısa öneri: "İskeleti `development`'a almak için `/merge` çalıştır (reviewer, prova ve auditor kapılarından geçer; development ortamını da ilk kez kurar)."
+5. Eksik iskelet dosyası yoksa: "Development ortamı".
 
 ## GitHub reposu (A, B)
 - **Görünürlük:** varsayılan **private**; kullanıcı açıkça public isterse public.
