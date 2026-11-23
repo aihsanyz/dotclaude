@@ -138,7 +138,7 @@ Aynı klasörde development `.env`'i de duruyorsa her komuta `--env-file .env.pr
 - Development ortamı: ana repo klasörü, `development` branch'i; her merge'den sonra `/merge` günceller. Yeni iş: `/tasker`.
 
 ## Komutlar
-<!-- deploy.sh bu bölümü okur. Biçim: "- anahtar: `değer`". Anahtarlar: service, migrate, test, seed, migrations -->
+<!-- deploy.sh bu bölümü okur. Biçim: "- anahtar: `değer`". Anahtarlar: service, migrate, lint, test, seed, migrations -->
 
 ## Notlar
 ```
@@ -147,11 +147,13 @@ Stack belirlendiğinde doldurulacak anahtarlar (örnek):
 ```markdown
 - service: `app`
 - migrate: `php artisan migrate --force`
+- lint: `vendor/bin/pint --test`
 - test: `php artisan test`
 - seed: `php artisan db:seed --force`
 - migrations: `database/migrations`
 ```
 
 - `service`: komutların çalıştığı compose servisi; yazılmazsa `build:` olan ilk servis.
+- `lint`: lint ve varsa tip kontrolü tek komutta (ör. `npm run lint && npm run typecheck`); provada testlerden önce çalışır, reviewer da bunu kullanır.
 - `seed`: her yeni worktree'de, her provada ve development'ın ilk kurulumunda çalışır. **Gerçekçi olmalı:** her tabloda birkaç örnek satır içersin; prova temiz veritabanıyla çalıştığı için veriye bağlı migration hatalarını (ör. dolu tabloya varsayılansız `NOT NULL` kolon) ancak seed verisi yakalar. Tekrar çalıştırıldığında hata vermemeli.
 - Komutlar container içinde çalışır: `docker compose run --rm <service> sh -c "<komut>"`.

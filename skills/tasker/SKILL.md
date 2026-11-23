@@ -49,6 +49,6 @@ Kısa özet: branch, worktree yolu, taban commit'i, varsa erişim adresleri ve d
 Bu işte aşağıdakilerden biri değişirse proje `CLAUDE.md`'sinin `## Stack` ve `## Komutlar` bölümlerini **aynı commit'te** güncelle:
 - Compose dosyalarında servis eklendi, silindi veya yeniden adlandırıldı; komutların çalıştığı servis değişti.
 - Bir veri servisinin image'ı veya motoru değişti. **Ana sürüm yükseltmesi** (ör. postgres 17 → 18) development'ın mevcut volume'larıyla açılmaz: değişiklikten önce kullanıcıya bildir ve yükseltme planı sun.
-- Migration, test veya seed komutu ya da migration dizini değişti; yeni tablolar için seed'e örnek satır eklenmeli.
+- Migration, lint, test veya seed komutu ya da migration dizini değişti; yeni tablolar için seed'e örnek satır eklenmeli.
 
 Güncellemenin doğruluğu `/merge`'deki provada test edilir: `## Komutlar`'daki bir komut yanlışsa prova başarısız olur. Reviewer da compose dosyaları ile proje `CLAUDE.md`'sinin uyumunu `/push`'ta denetler.

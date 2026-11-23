@@ -4,7 +4,7 @@ Personal [Claude Code](https://claude.com/claude-code) configuration (`~/.claude
 
 The workflow it sets up:
 
-- `/initer` prepares a project once: it writes a project `CLAUDE.md` with the stack and a `## Komutlar` section (migrate, test, seed) that `deploy.sh` reads.
+- `/initer` prepares a project once: it writes a project `CLAUDE.md` with the stack and a `## Komutlar` section (migrate, lint, test, seed) that `deploy.sh` reads.
 - Every task runs in a git worktree branched from `origin/development`; `main` and `development` are never committed to directly.
 - `/push` gates pushes behind the `reviewer` agent, `/merge` gates squash merges into `development` behind the `auditor` security agent, `/release` merges `development` into `main` with a merge commit and tags `vX.Y.Z`.
 - All project tooling runs in Docker; nothing is installed on the host.

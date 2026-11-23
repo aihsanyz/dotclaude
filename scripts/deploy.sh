@@ -23,17 +23,19 @@
 #   seed     rehearse, and apply --bootstrap: seed command
 #   up       docker compose up -d --wait (waits for the compose healthchecks)
 #   health   published ports accept connections on localhost and on the Tailscale IP
+#   lint     rehearse only: lint command
 #   test     rehearse only: test command
 #
 # Commands come from the "## Komutlar" section of the project's CLAUDE.md:
-#   - service: `app`   - migrate: `...`   - test: `...`   - seed: `...`   - migrations: `dir`
+#   - service: `app`   - migrate: `...`   - lint: `...`   - test: `...`   - seed: `...`
+#   - migrations: `dir`
 # Services and ports come from the compose file that COMPOSE_FILE in .env selects (compose.dev.yaml).
 # Exit: 0 ok, 1 failed, 2 usage.
 set -uo pipefail
 
 mode=${1:-}; target=${2:-}; bootstrap=0
 [[ ${3:-} == --bootstrap ]] && bootstrap=1
-[[ $mode == rehearse || $mode == apply ]] && [[ -d $target ]] || { sed -n '2,31p' "$0" >&2; exit 2; }
+[[ $mode == rehearse || $mode == apply ]] && [[ -d $target ]] || { sed -n '2,33p' "$0" >&2; exit 2; }
 dir=$(cd "$target" && pwd) || exit 2
 cd "$dir" || exit 2
 
@@ -95,7 +97,7 @@ for line in lines:
         inside = True; sys.stdout.write("section\0yes\0"); continue
     if inside and re.match(r"^#{1,2}\s", line):
         break
-    m = re.match(r"^\s*[-*]\s*(service|migrate|test|seed|migrations)\s*:\s*`(.+)`\s*$", line) if inside else None
+    m = re.match(r"^\s*[-*]\s*(service|migrate|lint|test|seed|migrations)\s*:\s*`(.+)`\s*$", line) if inside else None
     if m:
         sys.stdout.write(f"{m.group(1)}\0{m.group(2)}\0")
 EOF
@@ -238,8 +240,9 @@ while True:
 }
 step health health
 
-# ---- test (rehearse only) -----------------------------------------------------------------
+# ---- lint and test (rehearse only) --------------------------------------------------------
 if [[ $mode == rehearse ]]; then
+  if [[ -n ${C[lint]:-} ]]; then step lint run_cmd "${C[lint]}"; else echo "STEP lint     skipped (no lint command)"; fi
   if [[ -n ${C[test]:-} ]]; then step test run_cmd "${C[test]}"; else echo "STEP test     skipped (no test command)"; fi
   record_rehearsal
 fi

@@ -14,7 +14,7 @@ Tüm git komutlarında `git -C <mutlak yol>` kullan; shell değişkeniyle yol ku
 
 ## 2. Entegrasyon provası (merge öncesi, worktree içinde)
 Merge sonrası development'ta çalışacak standart işlemin birebir aynısı worktree'de denenir; hataların merge'den önce yakalanması hedeflenir.
-- `~/.claude/scripts/deploy.sh rehearse <worktree yolu>`. Sırası: kontroller → ortam değişkeni eşitleme → worktree'nin container ve volume'larını sıfırlama (temiz veritabanı) → build → migration → seed → `up` → sağlık kontrolü → testler.
+- `~/.claude/scripts/deploy.sh rehearse <worktree yolu>` (Bash `timeout: 600000`; `RESULT:` satırını görmeden turu bitirme). Sırası: kontroller → ortam değişkeni eşitleme → worktree'nin container ve volume'larını sıfırlama (temiz veritabanı) → build → migration → seed → `up` → sağlık kontrolü → lint → testler.
 - Script'in kontrolleri merge sonrası hataların bilinen sebeplerini yakalar: branch'in `origin/development`'ın gerisinde olması, commit edilmemiş değişiklik, development'ta zaten bulunan bir migration'ın değiştirilmesi, development `.env`'inde değeri olmayan yeni bir değişken.
 - **Başarısızsa merge yapma.** Hatayı (adım, son çıktı) bildir. Branch henüz merge edilmediği için düzeltme **aynı branch'te** yapılır; branch'in kendi migration'ları düzenlenebilir (development'ta hiç çalışmadılar). Kendiliğinden düzeltmeye başlama: yapılması gerekenleri kısa maddelerle özetle, kullanıcının yönlendirmesini bekle ve turu bitir. Kullanıcı isteyince düzelt ve `/merge`'i tekrar çalıştır.
   - "Development .env needs values" hatası: eksik değişkenlerin değerini kullanıcıdan iste (`request_secret` ile, gizliyse) ve hem worktree'nin hem ana repo klasörünün `.env`'ine yaz; değeri çıktıya yazdırma.
@@ -24,7 +24,7 @@ Merge sonrası development'ta çalışacak standart işlemin birebir aynısı wo
 - Sonuç "Engellendi" ise merge yapma ve kendiliğinden düzeltme:
   - Rapor yolunu, engelleyen bulguları ve yapılması gerekenleri kısa maddelerle özetle; kullanıcının yönlendirmesini bekle ve turu bitir. Raporu commit'leme.
   - Kullanıcı düzeltme isterse düzelt, commit'le ve `/merge`'i baştan çalıştır (push, prova ve auditor yeniden çalışır).
-- "Geçti" ise raporu commit'le (`docs(reports): add auditor report`) ve push et. Yalnızca rapor değiştiği için reviewer ve prova tekrar çalışmaz.
+- "Geçti" ise raporu commit'le (`docs(reports): add auditor report`) ve push et. Yalnızca rapor değiştiği için reviewer ve prova tekrar çalışmaz. Raporda "Önceden var olan" bulgular varsa merge'ü bekletme; 8. adımdaki özette listele ve ayrı bir `/tasker fix/...` işi öner.
 
 ## 4. Merge öncesi son kontrol
 - `git fetch origin`. Prova kaydını oku: `git -C <ana repo> config branch.<branch>.rehearsedBase` ve `rehearsedHead`.
@@ -46,7 +46,7 @@ Merge sonrası development'ta çalışacak standart işlemin birebir aynısı wo
 ## 6. Merge sonrası: standart işlemin development'ta uygulanması
 - Merge'ün gerçekleştiğini doğrula: `gh pr view <PR> --json state` sonucu `MERGED` olmalı; ardından `git fetch origin --prune`.
 - Yerel `development`'ı eşitle (`tasker` skill'inin 3. adımındaki yöntem).
-- `~/.claude/scripts/deploy.sh apply <ana repo>`: provadaki adımların aynısı (veritabanı sıfırlanmaz, seed ve testler çalışmaz). `RESULT: ok` ise başarılıdır. Compose dosyasında servis yoksa script adımları atlar.
+- `~/.claude/scripts/deploy.sh apply <ana repo>` (Bash `timeout: 600000`): provadaki adımların aynısı (veritabanı sıfırlanmaz, seed ve testler çalışmaz). `RESULT: ok` ise başarılıdır. Compose dosyasında servis yoksa script adımları atlar.
 - **İlk kurulum:** ana klasörde `.env` yoksa `.env.example`'dan oluştur (`COMPOSE_PROJECT_NAME=<proje>-dev`). Compose dosyasında servis var (`docker compose config --services` boş değil) ama ana klasörde hiç container yoksa (`docker compose ps -a -q` boş; ör. ilk servisler bu işle eklendi) `apply` yerine `apply --bootstrap` çalıştır; seed de çalışır. `local.md`'deki adresleri bildir.
 - Prova geçtiyse burada hata beklenmez. Yine de başarısız olursa geri alma yapılmaz; 7. adımdaki temizlikten sonra 8. adımda bildirilir.
 
@@ -62,5 +62,5 @@ Merge edilen branch'in işi bitmiştir; development güncellemesi başarısız o
 - **T3 Code:** Worktree T3 Code'un açtığı bir worktree'yse ve bir oturum hâlâ o dizindeyse, silmeden önce kullanıcıya bildir.
 
 ## 8. Bildir; development güncellemesi başarısızsa düzeltmeyi öner
-- Kısa özet: prova ve auditor sonucu, rapor yolu, PR başlığı, merge durumu, development ortamının durumu ve adresi, yapılan temizlik.
+- Kısa özet: prova ve auditor sonucu, rapor yolu, varsa önceden var olan güvenlik bulguları ve önerilen düzeltme işi, PR başlığı, merge durumu, development ortamının durumu ve adresi, yapılan temizlik.
 - `apply` başarısızsa: hatanın adımını ve son çıktısını bildir, olası sebebi ve yapılması gerekenleri kısa maddelerle özetle ve `/tasker fix/<merge edilen branch'in adı>` ile düzeltmeyi öner; kendiliğinden başlama. Kullanıcı isteyince worktree açılır; development'ın güncel koduyla açıldığı için hata orada tekrarlanır. Push ve merge yine kullanıcının isteğiyle yapılır. Düzeltme merge edilene kadar diğer işlerin provaları da aynı hatayla durabilir; düzeltme önceliklidir.

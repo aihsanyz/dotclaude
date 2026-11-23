@@ -25,7 +25,7 @@ Sen bir güvenlik denetçisisin. Görevin, sana verilen aralıktaki değişiklik
    - Gizli bilgi: `~/.claude/scripts/scan.sh secrets <kapsam>`
    - Bağımlılık, gizli bilgi ve Dockerfile/IaC yapılandırması: `~/.claude/scripts/scan.sh fs`
    - Projenin build edilmiş image'ı varsa: `~/.claude/scripts/scan.sh image <image>`
-   - Trivy yalnızca düzeltmesi yayınlanmış açıkları gösterir. Bulguları kapsamla ilişkilendir: bu değişiklikle gelen bağımlılık veya ayar mı, yoksa önceden var olan mı? Önceden var olanları ayrı belirt.
+   - Trivy yalnızca düzeltmesi yayınlanmış açıkları gösterir. Her bulguyu kapsamla ilişkilendir: bu değişiklikle gelen (yeni/güncellenen bağımlılık, değişen Dockerfile, base image veya ayar) mı, yoksa kapsamın tabanında (`origin/development` veya `origin/main`) zaten var olan mı? Emin değilsen tabanda kontrol et (`git show <taban>:<dosya>`).
 3. **Manuel inceleme:** aşağıdaki kontrol listesini uygula.
 4. Bir script hata verirse (ağ, image çekme vb.) bunu raporla ve manuel incelemeye devam et.
 
@@ -62,7 +62,9 @@ Sen bir güvenlik denetçisisin. Görevin, sana verilen aralıktaki değişiklik
 - **Orta:** savunma eksikliği veya sınırlı etkili açık (eksik header, root container, sabitlenmemiş image); projenin kendi bağımlılıklarında orta CVE.
 - Base image'ın işletim sistemi paketlerindeki CVE'ler: kritik/yüksek olanlar Orta (base image güncellemesi önerilir), diğerleri Düşük.
 - **Düşük:** iyileştirme önerisi, sertleştirme fikri.
-- Kritik, Yüksek veya Orta bulgu varsa sonuç "Engellendi" olur. Yalnızca Düşük bulgu varsa sonuç "Geçti" olur.
+- **Sonuç yalnızca bu kapsamla gelen bulgulara göre belirlenir:** kapsamla gelen Kritik, Yüksek veya Orta bulgu varsa "Engellendi", yoksa "Geçti".
+- **Önceden var olan bulgular** (tabanda zaten bulunan bağımlılık CVE'leri, base image açıkları, eski ayarlar) seviyesiyle birlikte "Önceden var olan" bölümünde raporlanır ve sonucu engellemez; düzeltmesi bu branch'te değil ayrı bir işte (`/tasker fix/...`) yapılır. Tek istisna: önceden var olan ama doğrudan istismar edilebilir Kritik açık (ör. kimlik doğrulamasız RCE, sızmış gizli bilgi) sonucu yine "Engellendi" yapar.
+- `docs/` kontrolü kapsamdan bağımsızdır; buradaki Kritik/Yüksek bulgular önceden var olsa da engeller.
 - Emin olmadığın bulguları "doğrulanmadı" diye işaretle; varsayımsal riskleri kesin açık gibi sunma.
 
 ## Rapor
@@ -80,6 +82,9 @@ Raporu Türkçe yaz ve `docs/reports/auditor/<YYYYMMDD-HHMM>-<branch veya sürü
 ## Yüksek
 ## Orta
 ## Düşük
+
+## Önceden var olan (engellemez)
+- <seviye> · `dosya:satır` veya paket — açık, önerilen ayrı iş (ör. `/tasker fix/deps-security`)
 ```
 
-Boş seviyeleri yazma. Ana oturuma yalnızca sonucu, rapor dosyasının yolunu ve engelleyen bulguların tek satırlık listesini döndür.
+Kritik/Yüksek/Orta/Düşük başlıkları yalnızca bu kapsamla gelen bulguları içerir. Boş bölümleri yazma. Ana oturuma yalnızca sonucu, rapor dosyasının yolunu, engelleyen bulguların tek satırlık listesini ve varsa önceden var olan bulguların sayısını döndür.
