@@ -12,11 +12,10 @@ Kullanıcının `/ship` demesi push ve PR onayıdır. Kapılar atlanmaz. Bir ad�
 Genel kurallar:
 - Git komutlarında `git -C <worktree mutlak yolu>` kullan; yolu shell değişkeniyle kurma.
 - Ana repo: `git -C <worktree> rev-parse --path-format=absolute --git-common-dir` çıktısının üst dizini.
-- **Kapı durumu** ana repoda `git config` ile tutulur:
-  - `branch.<branch>.reviewedHead`
-  - `branch.<branch>.securedHead`
-  - `branch.<branch>.crossHead`
-  - `branch.<branch>.fixRounds`
+- **Kapı durumu** ana repoda `git config` ile tutulur. Her kapı (reviewer, security, Codex) için iki değer vardır:
+  - `branch.<branch>.reviewedHead`, `securedHead`, `crossHead`: kapının en son incelediği HEAD. Sonuç ne olursa olsun her turda yazılır.
+  - `branch.<branch>.reviewedOk`, `securedOk`, `crossOk`: o turun sonucu (`true` veya `false`).
+  - Ayrıca `branch.<branch>.fixRounds`: aynı iş için yapılan düzeltme turu sayısı.
 
 ## 1. Ön kontroller
 - Worktree olarak argümandaki yolu kullan; yoksa bulunulan dizini.
@@ -54,9 +53,9 @@ Genel kurallar:
 - **Kısa mod:** Hassas değilse ve `git diff --shortstat origin/main...HEAD` toplamda 60 satırın altındaysa reviewer kısa modda çalışır.
 
 ## 5. İncelemeler
-**Mod seçimi.** Her kapının kendi kaydı vardır: reviewer için `reviewedHead`, security için `securedHead`, Codex için `crossHead`. Her kapı için:
-- Kayıt HEAD'e eşitse **veya** kayıt ile HEAD arasında yalnızca `docs/reports/` değiştiyse kapı atlanır.
-- Kayıt HEAD'in atasıysa mod `incremental since=<kayıt>` olur. Önceki raporun yolu da verilir.
+**Mod seçimi.** Her kapı için:
+- `<kapı>Ok` `true` ise **ve** `<kapı>Head` ile HEAD arasında yalnızca `docs/reports/` değiştiyse kapı atlanır.
+- `<kapı>Head` HEAD'in atasıysa mod `incremental since=<kapı>Head` olur ve önceki raporun yolu da verilir. Önceki tur başarısız olsa bile kapı yalnızca o turdan sonraki diff'e bakar ve önceki bulguların kapanıp kapanmadığını kontrol eder.
 - Diğer durumlarda mod `full` olur. Reviewer için, 4. adım kısa mod dediyse `short`.
 
 **Çalıştırılacaklar.** Aşağıdakileri **paralel** başlat ve hepsinin sonucunu bekle:
@@ -73,7 +72,7 @@ Genel kurallar:
   - Delegate'in sonucunu `next` yönlendirmesine göre bekle.
 
 **Sonuç.**
-- **Geçen her kapı** kendi kaydını hemen alır, diğer kapılar başarısız olsa bile: `git -C <ana repo> config branch.<branch>.reviewedHead|securedHead|crossHead <incelenen HEAD>`. Böylece sonraki turda yalnızca başarısız kapı tam çalışır, diğerleri yalnızca düzeltme diff'ine bakar.
+- **Her kapı biter bitmez** kaydını alır, diğer kapılar başarısız olsa bile: `<kapı>Head=<incelenen HEAD>` ve `<kapı>Ok=true|false`. Örneğin `git -C <ana repo> config branch.<branch>.crossHead <HEAD>` ve `git -C <ana repo> config branch.<branch>.crossOk false`.
 - **Bir kapı başarısız olursa** (reviewer veya Codex "Düzeltme gerekli", security "Engellendi"):
   - Push yapma ve kendiliğinden düzeltme. Raporlar commit'lenmeden worktree'de kalır ve bir sonraki başarılı `/ship`'te diğer raporlarla birlikte commit'lenir.
   - `fixRounds` değerini 1 artır.

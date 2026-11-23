@@ -23,7 +23,11 @@ paths:
   - Döküm önce geçici bir dosyaya yazılır, başarılı olunca asıl adına taşınır: `pg_dump ... > "$f.partial" && mv "$f.partial" "$f"`. Yarım veya boş bir döküm, geçerli bir yedek gibi görünmemelidir.
 - **Portlar:**
   - Development: uygulama portları `.env` değişkeniyle yayınlanır (`"${APP_PORT}:3000"`).
-  - Production (Dokploy): uygulama portu yayınlanmaz, `expose` kullanılır. Trafik Dokploy'un ters vekili (Traefik) ve domain ayarı üzerinden gelir. Yayınlanan port vekili atlar ve TLS'siz doğrudan erişim açar.
+  - Production: `compose.prod.yaml` platformdan bağımsızdır. Uygulama portu yayınlanmaz, `expose` kullanılır; domain veya vekil etiketi yazılmaz. Dış erişim deploy hedefinin işidir:
+    - Dokploy'da Domains sekmesi.
+    - Portainer'da ters vekil veya `compose.prod.ports.yaml` eki.
+    - Paketler `~/.claude/templates/deploy/` altında; hedef `AGENTS.md` → `## Deploy`'da yazar.
+  - Doğrudan yayınlanan bir port vekili atlar ve TLS'siz erişim açar.
   - Veritabanı, cache ve kuyruk gibi iç servislerin portları hiçbir ortamda yayınlanmaz.
 - **Bağlantı bilgileri:**
   - Değerler resmi image değişkenleriyle (`POSTGRES_*`, `MYSQL_*`, `MARIADB_*`, `MONGO_INITDB_*`) `.env.example`'da durur.

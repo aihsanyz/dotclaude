@@ -27,7 +27,7 @@
 - Teslim skill'lerle yapılır ve kapılar atlanmaz:
   - `/ship`: yerel kontroller, reviewer, gerekirse security ve Codex incelemesi, push, PR.
   - `/land`: CI yeşilse squash merge, development ortamının güncellenmesi, temizlik.
-  - `/release`: sürüm notu ve `vX.Y.Z` etiketi. Production'ı kullanıcı Dokploy'da bu etiketle günceller.
+  - `/release`: sürüm notu ve `vX.Y.Z` etiketi. Production'ı kullanıcı deploy hedefinde (Dokploy veya Portainer) bu etiketle günceller.
 - Kullanıcının bir skill'i çağırması veya aynı işi doğal dille istemesi o adımın onayıdır. Bunun dışında PR açma ve merge etme.
 - Commit ve PR metni: Conventional Commits başlığı + 1-2 maddelik açıklama. Emoji ve AI imzası yok. Squash'ta PR başlığı commit mesajı olur.
 - `gh`'yi kurma, `gh auth login` çalıştırma, token okuma. `gh auth status` başarısızsa bildir. T3'te açtığın PR'ı `link_pull_request` ile bağla; CI beklenecekse `watch_pull_request` ile izle.
@@ -45,7 +45,7 @@
   - Ana klasör: `main`'i izleyen development ortamı, varsayılan portlarla sürekli ayakta.
   - Worktree: kendi ortamı, 4100–4999 aralığından port alır.
   - İkisi de `~/.claude/scripts/devenv.sh` ile yönetilir.
-  - Production: ayrı sunucuda Dokploy (Compose türü), etiketle elle güncellenir.
+  - Production: ayrı sunucuda Dokploy (Compose türü) veya Portainer (Git stack), etiketle elle güncellenir. Hedef `AGENTS.md` → `## Deploy`'da yazar; hedefe özel adımlar `~/.claude/templates/deploy/` paketlerindedir.
 - `docs/` (spec, plan, rapor) sunucuda servis edilmez. Agent raporları `docs/reports/<agent>/` altına yazılır.
 - Yerel ağ ve Tailscale adresleri `local.md`'dedir; ortamı ayağa kaldırınca bu adresleri doğrula ve bildir.
 

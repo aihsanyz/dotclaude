@@ -8,6 +8,10 @@
 ## Komutlar
 <!-- devenv.sh ve CI bu bölümü okur. Biçim: "- anahtar: `değer`". Anahtarlar: service, migrate, postdeploy, lint, test, seed, migrations. Komutlar container içinde çalışır: docker compose run --rm <service> sh -c "<komut>". -->
 
+## Deploy
+<!-- Production hedefi: dokploy | portainer. Seçilince README'nin Production bölümü ~/.claude/templates/deploy/<hedef>/ paketinden doldurulur. Biçim: "- target: `değer`". -->
+- target: `belirlenmedi`
+
 ## İlkeler
 <!-- Projeye özgü kurallar: mimari kararlar, isimlendirme, yasaklar. Kısa tut. -->
 

@@ -44,6 +44,7 @@ Hiçbir şeyi düzeltmezsin.
   - İki compose dosyası aynı servislere sahip mi? İki `.env` örneği aynı anahtarlara sahip mi?
   - Komut, servis veya stack değiştiyse `AGENTS.md` (`## Stack`, `## Komutlar`) güncellenmiş mi? Değilse Önemli.
   - Çalıştırma veya deploy değiştiyse README güncellenmiş mi?
+  - **Deploy hedefi uyumu:** `AGENTS.md` → `## Deploy` hedefi (`dokploy`, `portainer`) ile README'nin Production bölümü, `compose.prod.yaml` ve varsa `compose.prod.ports.yaml` uyumlu mu? Paket: `~/.claude/templates/deploy/<hedef>/`. Production'da uygulama portu yayınlanmıyorsa README dış erişim yolunu (Dokploy domain'i, vekil veya port eki) anlatmalı. Yeni production değişkeni `.env.production.example`'da ve README'de yer almalı. Değilse Önemli.
   - Veri servisinin image ana sürümü değiştiyse Kritik.
 - **Docker ve ağ:**
   - Host'a kurulum gerektiren bir şey var mı?

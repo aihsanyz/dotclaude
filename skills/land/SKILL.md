@@ -35,14 +35,10 @@ Genel kurallar:
   - Merge yapma ve kendiliğinden düzeltme. Yapılması gerekenleri kısa maddelerle özetle ve turu bitir.
   - Kullanıcı düzelt derse: düzelt, commit'le, `/ship`, sonra `/land`.
 
-**İnceleme güncel mi?**
-- Ana repoda `git config branch.<branch>.reviewedHead` değerini oku.
-- `reviewedHead..<head>` arasında `docs/reports/` dışında değişiklik olmamalı (`git diff --name-only`).
-- Değişiklik varsa veya değer yoksa dur ve `/ship` öner.
-
-**Codex ve security.** Branch'te `docs/reports/security/` veya `docs/reports/codex/` raporu varsa (hassas değişiklik), aynı kural `securedHead` ve `crossHead` için de geçerlidir. En yeni raporların sonucu da şöyle olmalı:
-- security: "Geçti"
-- codex: "Hazır"
+**İnceleme güncel mi?** Ana repoda kapı kayıtlarını oku (`git config branch.<branch>.<anahtar>`):
+- Reviewer: `reviewedOk` `true` olmalı ve `reviewedHead..<head>` arasında `docs/reports/` dışında değişiklik olmamalı (`git diff --name-only`).
+- Branch'te `docs/reports/security/` veya `docs/reports/codex/` raporu varsa (hassas değişiklik), aynı kural `securedHead`/`securedOk` ve `crossHead`/`crossOk` için de geçerlidir.
+- Bir koşul sağlanmıyorsa veya kayıt yoksa dur ve `/ship` öner.
 
 ## 3. Merge
 - Gövdeyi hazırla: PR açıklamasından 1-2 madde.

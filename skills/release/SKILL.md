@@ -71,8 +71,9 @@ Kısa özet:
 - sürüm ve etiket
 - PR
 - security rapor yolu
-- **Dokploy'da yapılacaklar:**
-  - yeni env değişkenleri
-  - kaynak referansını `vX.Y.Z` yapıp deploy etmek
-  - migration'ların deploy sırasında `migrate` servisiyle çalışacağı bilgisi
+- **Production'da yapılacaklar:** `AGENTS.md` → `## Deploy` hedefine göre, `README.md`'nin Production bölümündeki "Sürüm güncelleme" adımları:
+  - Dokploy: Environment'a yeni değişkenler, kaynak referansı `vX.Y.Z`, Deploy.
+  - Portainer: stack'e yeni değişkenler, referans `refs/tags/vX.Y.Z`, Pull and redeploy.
+  - Hedef `belirlenmedi` ise bunu belirt ve hedefin seçilmesini öner.
+  - Her iki hedefte migration'lar deploy sırasında `migrate` servisiyle çalışır.
 - yapılan temizlik

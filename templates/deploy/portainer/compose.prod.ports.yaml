@@ -1,0 +1,8 @@
+# Optional overlay for hosts without a reverse proxy: publishes the app port.
+# Use with compose.prod.yaml (Portainer: "Additional paths"; plain compose:
+# COMPOSE_FILE=compose.prod.yaml:compose.prod.ports.yaml). Bind to 127.0.0.1 unless a TLS
+# proxy or tunnel sits in front of it.
+services:
+  {{APP_SERVICE}}:
+    ports:
+      - "${APP_BIND:-127.0.0.1}:${APP_PUBLISH_PORT:-{{APP_PORT}}}:{{APP_PORT}}"
