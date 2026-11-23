@@ -20,10 +20,16 @@ paths:
   - Uygulamayla aynı image'ı kullanır ve `AGENTS.md`'deki `migrate` komutunu, varsa ardından `postdeploy` komutunu çalıştırır.
   - Uygulama servisi buna `depends_on: { migrate: { condition: service_completed_successfully } }` ile bağlanır. Migration başarısızsa yeni sürüm başlamaz.
   - Production'da migration'dan önce veritabanı dökümü alınır (`pg_dump` / `mysqldump`) ve ayrı bir yedek volume'una yazılır.
+  - Döküm önce geçici bir dosyaya yazılır, başarılı olunca asıl adına taşınır: `pg_dump ... > "$f.partial" && mv "$f.partial" "$f"`. Yarım veya boş bir döküm, geçerli bir yedek gibi görünmemelidir.
 - **Portlar:**
-  - Uygulama portları `.env` değişkeniyle tanımlanır (`"${APP_PORT}:3000"`).
-  - Veritabanı, cache ve kuyruk gibi iç servislerin portları yayınlanmaz.
-  - Bağlantı bilgileri resmi image değişkenleriyle (`POSTGRES_*`, `MYSQL_*`, `MARIADB_*`, `MONGO_INITDB_*`) `.env.example`'da durur.
+  - Development: uygulama portları `.env` değişkeniyle yayınlanır (`"${APP_PORT}:3000"`).
+  - Production (Dokploy): uygulama portu yayınlanmaz, `expose` kullanılır. Trafik Dokploy'un ters vekili (Traefik) ve domain ayarı üzerinden gelir. Yayınlanan port vekili atlar ve TLS'siz doğrudan erişim açar.
+  - Veritabanı, cache ve kuyruk gibi iç servislerin portları hiçbir ortamda yayınlanmaz.
+- **Bağlantı bilgileri:**
+  - Değerler resmi image değişkenleriyle (`POSTGRES_*`, `MYSQL_*`, `MARIADB_*`, `MONGO_INITDB_*`) `.env.example`'da durur.
+  - Uygulamaya ayrı değişkenlerle verilir: libpq için `PGHOST`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`; diğer sürücüler için eşdeğerleri.
+  - Ham paroladan bağlantı adresi (`postgresql://user:${PASSWORD}@...`) kurulmaz. Parolada `@`, `:` veya `/` varsa bağlantı bozulur. Adres zorunluysa bileşenleri yüzde kodlamasıyla oluşturulur.
+  - Uygulamanın veritabanı kullanıcısı mümkünse migration kullanıcısından ayrı ve daha az yetkilidir.
 - **Image'lar:**
   - Base image'lar sabit sürümlüdür; `latest` kullanılmaz.
   - Production image'ı root olmayan bir kullanıcıyla çalışır.
@@ -33,3 +39,4 @@ paths:
   - `.dockerignore` en az `.git`, `.env`, `.env.*`, `!.env*.example` ve `docs/` satırlarını içerir.
   - `docs/` image'a, build çıktısına veya statik sunuma girmez.
 - **Healthcheck:** Her servisin bir healthcheck'i olur; `docker compose up --wait` buna dayanır.
+  - Veritabanı kontrolü TCP üzerinden yapılır: `pg_isready -h 127.0.0.1 ...` veya `mysqladmin ping -h 127.0.0.1`. Postgres ve MySQL image'ları ilk açılışta yalnızca sokette dinleyen geçici bir sunucu çalıştırır; soket kontrolü erken "hazır" der ve ona bağlı servisler bağlanamaz.

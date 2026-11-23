@@ -1,6 +1,10 @@
 # Production (Dokploy, Compose type): code baked into the image, Dockerfile target "prod",
-# no bind mounts, restart: unless-stopped.
-# When the stack exists, add a one-shot "migrate" service (same image; runs the migrate and
-# postdeploy commands from AGENTS.md after a database dump) and make the app depend on it:
-#   depends_on: { migrate: { condition: service_completed_successfully } }
+# no bind mounts, restart: unless-stopped, no published ports (expose; Dokploy routes the domain).
+# When the stack exists (see ~/.claude/rules/docker.md):
+#   db       healthcheck over TCP (pg_isready -h 127.0.0.1 ...)
+#   backup   one-shot dump to a backups volume, written to <file>.partial then renamed
+#   migrate  one-shot, same image as the app; runs the migrate and postdeploy commands
+#   app      depends_on: { migrate: { condition: service_completed_successfully } }
+# Credentials reach the app as separate variables (PGHOST, PGUSER, ...), never as a URL
+# built from a raw password.
 services: {}

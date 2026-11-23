@@ -34,7 +34,8 @@ EOF
 }
 load_komutlar
 
-# Build a CI .env from an example file: empty values get throwaway CI values.
+# Build a CI .env from an example file: empty values get throwaway CI values that contain
+# URL-hostile characters, so credentials pasted into URLs without encoding fail in CI.
 make_env() {  # make_env <example> <project name>
   python3 - "$1" "$2" <<'EOF'
 import re, secrets, sys
@@ -47,7 +48,7 @@ for line in open(example):
         if k == "COMPOSE_PROJECT_NAME":
             v = name
         elif v in ("", '""', "''"):
-            v = "ci" + secrets.token_hex(8)
+            v = "ci" + secrets.token_hex(8) + "@:/%+"  # URL-hostile characters catch unencoded credentials
         lines.append(f"{k}={v}")
 open(".env", "w").write("\n".join(lines) + "\n")
 EOF
