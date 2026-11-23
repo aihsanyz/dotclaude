@@ -13,4 +13,11 @@ Sürüm güncelleme:
 1. `releases/vX.Y.Z.md` dosyasındaki **Upgrade Notes**'u oku. Yeni ortam değişkeni varsa önce stack'e ekle.
 2. Stack ayarlarında referansı `refs/tags/vX.Y.Z` yap ve **Pull and redeploy** çalıştır. Migration'lar `migrate` servisiyle kendiliğinden çalışır.
 
-Geri dönüş: Referansı önceki etikete çekip **Pull and redeploy** çalıştır. Migration'lar geriye uyumlu yazıldığı için eski sürüm yeni şemayla çalışır. Veriyi geri almak gerekirse `backups` volume'undaki son `pre-migrate-*.sql` dökümü kullanılır.
+Geri dönüş:
+- **Yalnızca kod:** Referansı önceki etikete çekip **Pull and redeploy** çalıştır. Migration'lar geriye uyumlu yazıldığı için eski sürüm yeni şemayla çalışır. Çoğu durumda bu yeterlidir.
+- **Veriyle birlikte:** Sıra önemlidir, çünkü her deploy `backup` servisini çalıştırıp yeni bir döküm alır.
+  1. Geri dönüş deploy'undan **önce**, `backups` volume'unda sorunlu güncellemenin aldığı dökümü belirle: adı güncelleme deploy'unun saatini taşıyan `pre-migrate-<tarih-saat>.sql`. Ondan sonra alınmış dökümler sorunlu sürümün verisini içerir.
+  2. Uygulama servisinin container'ını durdur (sunucuda `docker stop <container>`); `db` ayakta kalmalı.
+  3. Veritabanını boşaltıp (drop/create) bu dökümü `psql` ile yükle.
+  4. Önceki etikete dön ve deploy et.
+  - Güncellemeden sonra yazılan veri kaybolur.

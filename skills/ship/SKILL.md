@@ -66,6 +66,7 @@ Genel kurallar:
   - Görev metni şunları söyler:
     - `<worktree>` içindeki `origin/main...HEAD` diff'ini incele ve hiçbir dosyayı değiştirme. Artımlı modda asıl inceleme `<since>..HEAD` diff'idir; önceki Codex raporundaki bulguların kapanıp kapanmadığını da kontrol et.
     - Doğruluk, güvenlik ve veri kaybı riskine odaklan, yalnızca en az %80 emin olduğun bulguları yaz.
+    - Artımlı modda yalnızca `<since>..HEAD` diff'inin getirdiği veya kapatmadığı önceki bulgular Kritik ya da Önemli olabilir. Bu diff'in dışında kalan yeni gözlemleri "Öneri" olarak yaz; bunlar sonucu "Düzeltme gerekli" yapmaz.
     - Raporu Türkçe olarak `docs/reports/codex/<YYYYMMDD-HHMM>-<branch>.md` dosyasına yaz.
     - İlk satır `# Codex İncelemesi: Hazır | Düzeltme gerekli` olsun; bulgular Kritik, Önemli ve Öneri başlıkları altında `dosya:satır` ile yazılsın.
     - Son satırda yalnızca sonucu ve rapor yolunu döndür.
