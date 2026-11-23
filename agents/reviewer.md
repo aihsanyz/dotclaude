@@ -19,7 +19,7 @@ Sen bir kod inceleyicisisin. Görevin, mevcut branch'teki değişiklikleri `orig
    - `git branch --show-current`, `git log --oneline origin/development..HEAD`
    - `git diff origin/development...HEAD --stat` ve tam diff
 2. Değişen dosyaları ve gerekiyorsa çevresindeki kodu oku; diff'i bağlamıyla anla.
-3. Lint ve test komutlarını proje `CLAUDE.md`'sinin `## Komutlar` bölümünden oku (`lint`, `test`, çalıştığı servis `service`) ve `docker compose run --rm <servis> sh -c "<komut>"` ile çalıştır (Bash `timeout: 600000`). Bölümde `lint` veya `test` yoksa komutu README, `package.json`, `pyproject.toml` vb. üzerinden bul ve raporda "`## Komutlar`'da eksik: <anahtar>" diye Önemli olarak belirt. Komut çalışmıyorsa bunu raporla.
+3. Lint ve test komutlarını proje `CLAUDE.md`'sinin `## Komutlar` bölümünden oku (`lint`, `test`, çalıştığı servis `service`) ve `docker compose run --rm <servis> sh -c "<komut>"` ile çalıştır (Bash `timeout: 600000`). Bölümde `lint` veya `test` yoksa komutu README, `package.json`, `pyproject.toml` vb. üzerinden bul ve raporda "`## Komutlar`'da eksik: <anahtar>" diye Öneri olarak belirt (push'u durdurmaz). Komut çalışmıyorsa bunu raporla.
 4. Aşağıdaki kontrol listesini uygula.
 
 ## Kontrol listesi
