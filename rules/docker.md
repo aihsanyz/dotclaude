@@ -12,6 +12,7 @@ paths:
 
 - **İki ortam, iki dosya:**
   - `compose.dev.yaml`: development ortamı ve worktree'ler. Bind mount, hot reload ve Dockerfile'ın `dev` target'ı kullanılır. `node_modules` ve `.venv` gibi dizinler named volume'da durur.
+  - Bind mount'lu servis host kullanıcısıyla çalışır (`user: "${HOST_UID:-1000}:${HOST_GID:-1000}"`; değerler `.env.example`'da). Aksi halde container'ın yazdığı dosyalar (cache, build çıktısı) root'a ait olur ve worktree silinemez. Araçların cache'i kapatılır veya bind mount dışına yazdırılır.
   - `compose.prod.yaml`: production. Kod image'ın içindedir, bind mount yoktur. Dockerfile'ın `prod` target'ı ve `restart: unless-stopped` kullanılır.
   - Hangi dosyanın kullanılacağını `.env`'deki `COMPOSE_FILE` seçer: `.env.example` → `compose.dev.yaml`, `.env.production.example` → `compose.prod.yaml`.
 - **Birlikte güncelle:** Servis, veri servisi veya değişken eklerken iki compose dosyasını ve iki örnek `.env`'i aynı commit'te güncelle. Servis adları iki dosyada aynı kalır.

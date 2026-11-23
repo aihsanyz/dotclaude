@@ -6,7 +6,7 @@ paths:
 
 # CI kuralları (GitHub Actions)
 
-- **Job'lar:** CI, PR'larda ve `main`'de çalışır. Job adları sabittir: `lint`, `test`, `rehearse`, `build`, `scan`. `/land` bu adları bekler.
+- **Job'lar:** CI, PR'larda ve `main`'de çalışır. Job adları sabittir: `lint`, `test`, `rehearse`, `scan`. Production build `rehearse` içinde yapılır. `/land` bu adları bekler. Mantık `.github/scripts/ci.sh` içindedir ve komutları `AGENTS.md`'deki `## Komutlar`'dan okur.
 - **Prova:**
   - `rehearse` temiz veritabanında migration + seed çalıştırır.
   - Ardından **yükseltme provası** yapar: son `v*` etiketinin şeması ve seed'i üzerine HEAD migration'larını uygular.

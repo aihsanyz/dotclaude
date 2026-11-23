@@ -1,0 +1,6 @@
+# Production (Dokploy, Compose type): code baked into the image, Dockerfile target "prod",
+# no bind mounts, restart: unless-stopped.
+# When the stack exists, add a one-shot "migrate" service (same image; runs the migrate and
+# postdeploy commands from AGENTS.md after a database dump) and make the app depend on it:
+#   depends_on: { migrate: { condition: service_completed_successfully } }
+services: {}
