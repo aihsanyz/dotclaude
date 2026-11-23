@@ -5,8 +5,12 @@
 !.gitignore
 !README.md
 !CLAUDE.md
+!SOURCES.md
 !local.example.md
 !settings.json
+
+!rules/
+!rules/*.md
 
 !agents/
 !agents/*.md
@@ -16,16 +20,13 @@
 
 !scripts/
 !scripts/*.sh
+!scripts/*.py
+
+!templates/
+!templates/**
 
 !skills/
-!skills/tasker/
-!skills/tasker/SKILL.md
-!skills/push/
-!skills/push/SKILL.md
-!skills/merge/
-!skills/merge/SKILL.md
-!skills/release/
-!skills/release/SKILL.md
-!skills/initer/
-!skills/initer/SKILL.md
-
+!skills/*/
+!skills/*/**
+skills/.trash/
+skills/synced/

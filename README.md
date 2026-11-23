@@ -1,39 +1,42 @@
 # dotclaude
 
-Personal [Claude Code](https://claude.com/claude-code) configuration (`~/.claude`): global instructions, subagents, skills, a git guard hook and helper scripts.
+Personal [Claude Code](https://claude.com/claude-code) configuration (`~/.claude`), built for working through [T3 Code](https://t3.codes) on a single Linux server where everything runs in Docker.
 
-The workflow it sets up:
+The previous setup is kept at the `legacy-2026-11` tag.
 
-- `/initer` prepares a project once: it writes a project `CLAUDE.md` with the stack and a `## Komutlar` section (migrate, lint, test, seed) that `deploy.sh` reads.
-- Every task runs in a git worktree branched from `origin/development`; `main` and `development` are never committed to directly.
-- `/push` gates pushes behind the `reviewer` agent, `/merge` gates squash merges into `development` behind the `auditor` security agent, `/release` merges `development` into `main` with a merge commit and tags `vX.Y.Z`.
-- All project tooling runs in Docker; nothing is installed on the host.
-- Each project keeps a long-running `development` environment in its main checkout, updated by `/merge` after every merge.
-- Each environment runs its own data services from the project's compose file; worktrees start with a fresh database (migrations + seed).
-- Before every merge, the post-merge procedure is rehearsed in the worktree (`scripts/deploy.sh`).
-- Agent reports are written to `docs/reports/<agent>/` in each project.
+## How it works
+
+- **One long-lived branch: `main`.** Every task is a T3 thread in its own git worktree, branched from `origin/main`. Changes land through a PR and a squash merge.
+- **Deterministic checks run in CI, judgement in agents.** GitHub Actions runs lint, tests, a fresh-database and upgrade migration rehearsal, the production build and secret/CVE scans. Agents review code and security.
+- **Guards are hooks, not prose.** `hooks/guard.py` blocks direct pushes or commits to `main`, force pushes, `--no-verify`, admin merges and host installs. It asks before destructive commands. `hooks/session_card.py` restates the language rule and the current branch, worktree and PR at every session start and after compaction.
+- **Small context.** `CLAUDE.md` holds principles only. File-type rules in `rules/` load only when matching files are touched. Skills are vendored, not installed as plugins, and claude.ai skill/plugin sync is off.
+- **Provider-neutral projects.** Project rules live in `AGENTS.md`, which both Claude and Codex read. The project `CLAUDE.md` is `@AGENTS.md`.
+- **Environments.**
+  - The main checkout runs the development environment from `main`.
+  - Each worktree gets its own environment on ports 4100–4999.
+  - Production runs on a separate Dokploy server (Compose type) and is updated by hand to a release tag.
 
 ## Contents
 
 | Path | Purpose |
 |---|---|
-| `CLAUDE.md` | Global instructions loaded in every session (written in Turkish) |
-| `local.example.md` | Template for machine-specific settings; copy to `local.md` |
-| `settings.json` | Language, attribution and the git guard hook |
-| `agents/` | `reviewer`, `auditor`, `releaser` subagents |
-| `skills/` | `/initer`, `/tasker`, `/push`, `/merge`, `/release` |
-| `scripts/deploy.sh` | One standard procedure for the pre-merge rehearsal and the development update |
-| `hooks/guard_git.py` | Blocks direct commits/pushes to `main`/`development` and force pushes |
+| `CLAUDE.md` | Global instructions (Turkish) |
+| `rules/` | Path-scoped rules: Docker/compose, migrations, dev-server networking, CI |
+| `settings.json` | Language, attribution, sync off, permissions, hooks |
+| `hooks/` | `guard.py` (+ `test_guard.py`), `session_card.py` |
 | `scripts/scan.sh` | gitleaks and trivy in pinned Docker images |
-| `scripts/release-info.sh` | Release facts and semver proposal |
+| `skills/` | Design skills vendored from Anthropic (see `SOURCES.md`); workflow skills follow |
+| `SOURCES.md` | Origin, commit and license of vendored content |
+| `local.example.md` | Template for machine-specific settings; copy to `local.md` |
 
 ## Install
 
 ```bash
 git clone https://github.com/aihsanyz/dotclaude.git ~/.claude
 cp ~/.claude/local.example.md ~/.claude/local.md   # then fill in machine details
+python3 ~/.claude/hooks/test_guard.py              # verify the guard hook
 ```
 
-If `~/.claude` already exists, clone elsewhere and copy the files in. Requirements on the host: `git`, `gh` (authenticated), `docker`, `python3`.
+If `~/.claude` already exists, clone elsewhere and copy the files in. Host requirements: `git`, `gh` (authenticated), `docker`, `python3`.
 
 `.gitignore` is a whitelist: credentials, session transcripts, memory, caches, plugins and `local.md` are never committed.

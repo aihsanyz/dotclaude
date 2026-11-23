@@ -1,10 +1,19 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "theme": "auto",
   "language": "turkish",
   "attribution": {
     "commit": "",
     "pr": "",
     "sessionUrl": false
+  },
+  "syncClaudeAiPlugins": false,
+  "syncClaudeAiSkills": false,
+  "permissions": {
+    "deny": [
+      "Read(~/.claude/.credentials.json)",
+      "Read(~/.config/gh/hosts.yml)"
+    ]
   },
   "hooks": {
     "PreToolUse": [
@@ -13,9 +22,20 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$HOME/.claude/hooks/guard_git.py\"",
+            "command": "python3 \"$HOME/.claude/hooks/guard.py\"",
             "timeout": 30,
-            "statusMessage": "Checking git guard"
+            "statusMessage": "Checking guard rules"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$HOME/.claude/hooks/session_card.py\"",
+            "timeout": 10
           }
         ]
       }
